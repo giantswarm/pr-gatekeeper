@@ -61,7 +61,7 @@ func main() {
 			if err != nil || checkRun == nil {
 				accessAllowed = false
 				messages = append(messages, fmt.Sprintf("⚠️ Check Run `%s` is required and but wasn't found\n", check))
-			} else if *checkRun.Conclusion != "success" {
+			} else if checkRun.Conclusion == nil || *checkRun.Conclusion != "success" {
 				accessAllowed = false
 				messages = append(messages, fmt.Sprintf("⚠️ Check Run `%s` is required and not currently completed successfully\n", check))
 			} else if *checkRun.Conclusion == "success" {
