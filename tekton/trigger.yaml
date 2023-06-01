@@ -1,0 +1,40 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: pr-gatekeeper
+  labels:
+    app: pr-gatekeeper
+    app.kubernetes.io/name: pr-gatekeeper
+    app.kubernetes.io/component: trigger
+    app.kubernetes.io/instance: pr-gatekeeper
+    app.kubernetes.io/part-of: pr-gatekeeper
+    application.giantswarm.io/team: team-tinkerers
+  annotations:
+    tekton.dev/tags: github, pull request
+    giantswarm.io/notes: |
+      Triggers on all PR changes and runs pr-gatekeeper against the PR
+spec:
+  name: github-pr
+  interceptors:
+    - ref:
+        name: "github"
+      params:
+        - name: "eventTypes"
+          value: ["pull_request", "check_run"]
+        - name: "secretRef"
+          value:
+            secretName: github-webhook-secret
+            secretKey: token
+    - name: add-pr-number
+      ref:
+        name: "cel"
+      params:
+        - name: "overlays"
+          value:
+          - key: pr_number
+            expression: "has(body.check_run.pull_requests) && body.check_run.pull_requests.size() > 0 ? body.check_run.pull_requests[0].number : body.number"
+  bindings:
+    - ref: pr-gatekeeper
+      kind: ClusterTriggerBinding
+  template:
+    ref: pr-gatekeeper

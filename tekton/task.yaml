@@ -1,0 +1,70 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: pr-gatekeeper
+  labels:
+    app: pr-gatekeeper
+    app.kubernetes.io/name: pr-gatekeeper
+    app.kubernetes.io/component: task
+    app.kubernetes.io/instance: pr-gatekeeper
+    app.kubernetes.io/part-of: pr-gatekeeper
+    application.giantswarm.io/team: team-tinkerers
+  annotations:
+    tekton.dev/tags: checks, github, gatekeeper, heimdall
+    tekton.dev/displayName: "Heimdall - PR Gatekeeper"
+spec:
+  description: "PR check to ensure requirements are met before merging"
+
+  params:
+  # Required
+  - name: PR
+    type: string
+    description: The PR number
+
+  - name: REPO
+    type: string
+    description: The repository the issue or PR belogs to in the format `organisation/repo-name`.
+
+  # Optional
+  - name: IMAGE
+    type: string
+    default: "quay.io/giantswarm/pr-gatekeeper:latest"
+
+  - name: GITHUB_TOKEN_SECRET
+    type: string
+    description: The name of the secret containing the GitHub authentication credentials.
+    default: tinkerers-ci-github-token
+
+  steps:
+    - name: heimdall
+      image: $(params.IMAGE)
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.GITHUB_TOKEN_SECRET)
+              key: GITHUB_TOKEN
+        - name: PR
+          value: $(params.PR)
+        - name: REPO
+          value: $(params.REPO)
+        - name: PIPELINE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tekton.dev/pipeline']
+        - name: PIPELINE_RUN
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tekton.dev/pipelineRun']
+        - name: TASK_RUN
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tekton.dev/taskRun']
+        - name: DISPLAY_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['tekton.dev/displayName']
+        - name: PIPELINE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace

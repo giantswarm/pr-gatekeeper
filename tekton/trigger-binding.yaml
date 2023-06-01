@@ -1,0 +1,20 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: ClusterTriggerBinding
+metadata:
+  name: pr-gatekeeper
+  labels:
+    app: pr-gatekeeper
+    app.kubernetes.io/name: pr-gatekeeper
+    app.kubernetes.io/component: trigger-binding
+    app.kubernetes.io/instance: pr-gatekeeper
+    app.kubernetes.io/part-of: pr-gatekeeper
+    application.giantswarm.io/team: team-tinkerers
+  annotations:
+    tekton.dev/tags: github, pull request
+spec:
+  params:
+    - name: PR
+      value: $(extensions.pr_number)
+    - name: REPO
+      value: $(body.repository.name)
+---
