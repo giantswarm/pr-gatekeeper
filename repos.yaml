@@ -1,3 +1,35 @@
-tinkerers-ci-test-1:
+cluster-test-suites:
+  requiredChecks:
+    - "E2E Tests"
+
+cluster-aws:
+  requiredChecks:
+    - "E2E Tests"
+cluster-azure:
+  requiredChecks:
+    - "E2E Tests"
+cluster-gcp:
+  requiredChecks:
+    - "E2E Tests"
+cluster-cloud-director:
+  requiredChecks:
+    - "E2E Tests"
+cluster-vsphere:
+  requiredChecks:
+    - "E2E Tests"
+
+default-apps-aws:
+  requiredChecks:
+    - "E2E Tests"
+default-apps-azure:
+  requiredChecks:
+    - "E2E Tests"
+default-apps-gcp:
+  requiredChecks:
+    - "E2E Tests"
+default-apps-cloud-director:
+  requiredChecks:
+    - "E2E Tests"
+default-apps-vsphere:
   requiredChecks:
     - "E2E Tests"
