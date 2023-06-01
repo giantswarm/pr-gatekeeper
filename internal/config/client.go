@@ -13,7 +13,11 @@ type Repo struct {
 }
 
 func LoadConfig() (Repos, error) {
-	file, err := os.ReadFile("repos.yaml")
+	configFile := os.Getenv("CONFIG_FILE")
+	if configFile == "" {
+		configFile = "repos.yaml"
+	}
+	file, err := os.ReadFile(configFile)
 	if err != nil {
 		return nil, err
 	}
