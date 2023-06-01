@@ -6,11 +6,10 @@ orbs:
 workflows:
   build-and-publish:
     jobs:
-      - architect/go-build:
+      - architect/go-test:
           context: architect
-          name: go-build
-          binary: pr-gatekeeper
-          resource_class: xlarge
+          name: go-test
+          resource_class: medium
           filters:
             tags:
               only: /^v.*/
@@ -22,7 +21,7 @@ workflows:
           password_envar: "QUAY_PASSWORD"
           tag-latest-branch: main
           requires:
-          - go-build
+          - go-test
           filters:
             # Trigger the job also on git tag.
             tags:
@@ -37,7 +36,7 @@ workflows:
           password_envar: "DOCKER_PASSWORD"
           tag-latest-branch: main
           requires:
-            - go-build
+            - go-test
           # Needed to trigger job also on git tag.
           filters:
             tags:
