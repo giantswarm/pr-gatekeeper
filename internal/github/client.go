@@ -16,7 +16,7 @@ const (
 
 var (
 	checkName = "Heimdall - PR Gatekeeper"
-	imageURL  = "https://i.postimg.cc/SsJHqdvH/heimdall.jpg"
+	imageURL  = "https://github.com/giantswarm/pr-gatekeeper/assets/3384072/6c85d6be-6726-446c-ab37-c6c26601aec9"
 	imageAlt  = "Heimdall"
 )
 
