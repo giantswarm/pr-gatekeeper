@@ -1,0 +1,3 @@
+tinkerers-ci-test-1:
+  requiredChecks:
+    - "E2E Tests"
