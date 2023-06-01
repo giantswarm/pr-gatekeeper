@@ -4,15 +4,6 @@ orbs:
   architect: giantswarm/architect@4.29.0
 
 workflows:
-  test:
-    build-and-publish:
-      - architect/go-test:
-          name: go-test
-          filters:
-            # Trigger job also on git tag.
-            tags:
-              only: /^v.*/
-
   build-and-publish:
     jobs:
       - architect/go-build:
