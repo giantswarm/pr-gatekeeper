@@ -25,6 +25,12 @@ spec:
           value:
             secretName: github-webhook-secret
             secretKey: token
+    - name: ignore-own-pr-checks
+      ref:
+        name: "cel"
+      params:
+      - name: filter
+        value: "has(body.check_run) ? body.check_run.name != 'Heimdall - PR Gatekeeper' : true"
     - name: add-pr-number
       ref:
         name: "cel"
