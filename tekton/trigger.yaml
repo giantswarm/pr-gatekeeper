@@ -44,3 +44,51 @@ spec:
       kind: ClusterTriggerBinding
   template:
     ref: pr-gatekeeper
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: pr-gatekeeper-recheck
+  labels:
+    app: pr-gatekeeper
+    app.kubernetes.io/name: pr-gatekeeper
+    app.kubernetes.io/component: trigger
+    app.kubernetes.io/instance: pr-gatekeeper-recheck
+    app.kubernetes.io/part-of: pr-gatekeeper
+    application.giantswarm.io/team: team-tinkerers
+  annotations:
+    tekton.dev/tags: github, pull request
+    giantswarm.io/notes: |
+      Triggers pr-gatekeeper to run when a comment with `/recheck` is added to a PR
+spec:
+  name: github-pr
+  interceptors:
+    - ref:
+        name: "github"
+      params:
+        - name: "eventTypes"
+          value: ["issue_comment"]
+        - name: "secretRef"
+          value:
+            secretName: github-webhook-secret
+            secretKey: token
+    - name: contains-trigger-keyword
+      ref:
+        name: "cel"
+      params:
+      - name: filter
+        value: "body.action in ['created', 'edited'] && body.comment.body != null && body.comment.body.indexOf('/recheck') >= 0"
+    - name: add-pr-number
+      ref:
+        name: "cel"
+      params:
+        - name: "overlays"
+          value:
+          - key: pr_number
+            expression: "body.issue.number"
+  bindings:
+    - ref: pr-gatekeeper
+      kind: ClusterTriggerBinding
+  template:
+    ref: pr-gatekeeper
+---

@@ -6,6 +6,7 @@ A PR check run that ensures requirements are met before allowing PRs to be merge
 
 - Configure a list of PR Checks that must all be successful before merging
 - Allow skipping these checks by placing a `skip/ci` label on the PR
+- Force a recheck by adding a comment to a PR containing the trigger `/recheck`
 
 ## How it works
 
