@@ -17,6 +17,6 @@ FROM --platform=${TARGETPLATFORM:-linux/amd64} scratch
 WORKDIR /app/
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /app/heimdall /app/heimdall
-ADD repos.yaml ./
-ENV CONFIG_FILE=/app/repos.yaml
+ADD config.yaml ./
+ENV CONFIG_FILE=/app/config.yaml
 ENTRYPOINT ["/app/heimdall"]
