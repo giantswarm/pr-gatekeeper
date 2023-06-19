@@ -6,46 +6,61 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
+type Conf struct {
+	KnownTriggers KnownTriggers `json:"knownTriggers"`
+	Repos         Repos         `json:"repos"`
+}
+
+type KnownTriggers map[string]string
 type Repos map[string]Repo
 
 type Repo struct {
 	RequiredChecks []string `json:"requiredChecks"`
 }
 
-func LoadConfig() (Repos, error) {
+func LoadConfig() (*Conf, error) {
 	configFile := os.Getenv("CONFIG_FILE")
 	if configFile == "" {
-		configFile = "repos.yaml"
+		configFile = "config.yaml"
 	}
 	file, err := os.ReadFile(configFile)
 	if err != nil {
 		return nil, err
 	}
 
-	var repoConfig Repos
-	err = yaml.Unmarshal(file, &repoConfig)
+	var conf Conf
+	err = yaml.Unmarshal(file, &conf)
 	if err != nil {
 		return nil, err
 	}
 
-	return repoConfig, nil
+	return &conf, nil
 }
 
 func GetRepoConfig(repo string) (*Repo, error) {
-	repoConfig, err := LoadConfig()
+	conf, err := LoadConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	config, ok := repoConfig[repo]
+	config, ok := conf.Repos[repo]
 	if ok {
 		return &config, nil
 	}
 
 	return nil, nil
+}
 
-	// // TODO: Replace with actual code...
-	// return Repo{
-	// 	RequiredChecks: []string{"E2E Tests"},
-	// }
+func GetKnownTrigger(check string) string {
+	conf, err := LoadConfig()
+	if err != nil {
+		return ""
+	}
+
+	trigger, ok := conf.KnownTriggers[check]
+	if ok {
+		return trigger
+	}
+
+	return ""
 }

@@ -62,7 +62,7 @@ func (c *Client) AddCheck(pending bool, msg string) error {
 		summary = "PR meets all defined requirements for merging"
 	}
 
-	msg += "\n\n---\n_Source: https://github.com/giantswarm/pr-gatekeeper_\n_Repo Config: https://github.com/giantswarm/pr-gatekeeper/blob/main/repos.yaml_"
+	msg += "\n\n---\n_Source: https://github.com/giantswarm/pr-gatekeeper_\n_Repo Config: https://github.com/giantswarm/pr-gatekeeper/blob/main/config.yaml_"
 
 	_, _, err := c.Checks.CreateCheckRun(c.Ctx, owner, c.Repo, github.CreateCheckRunOptions{
 		Name:       checkName,
