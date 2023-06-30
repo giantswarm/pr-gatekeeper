@@ -7,10 +7,12 @@ import (
 
 	"github.com/giantswarm/pr-gatekeeper/internal/config"
 	"github.com/giantswarm/pr-gatekeeper/internal/github"
+	"github.com/giantswarm/pr-gatekeeper/internal/results"
 )
 
 const (
-	skipLabel = "skip/ci"
+	skipLabel      = "skip/ci"
+	doNotMergeHold = "do-not-merge/hold"
 )
 
 var (
@@ -42,8 +44,7 @@ func main() {
 		panic(err)
 	}
 
-	accessAllowed := true
-	messages := []string{}
+	result := results.New()
 
 	// Perform checks and stuff
 	repoConfig, err := config.GetRepoConfig(repo)
@@ -54,46 +55,50 @@ func main() {
 
 	if repoConfig == nil {
 		fmt.Println("No repo config found, skipping checks")
-		messages = append(messages, "No repo config found, skipping checks")
+		result.AddMessage("No repo config found, skipping checks")
 	} else {
-
-		messages = append(messages, fmt.Sprintf("## Details for commit: `%s`\n", *pullRequest.Head.SHA))
+		result.AddMessage(fmt.Sprintf("## Details for commit: `%s`\n", *pullRequest.Head.SHA))
 
 		for _, check := range repoConfig.RequiredChecks {
 			checkRun, err := gh.GetCheck(check)
 			if err != nil || checkRun == nil {
-				accessAllowed = false
+				result.ChecksPassing = false
 				trigger := config.GetKnownTrigger(check)
 				if trigger != "" {
 					trigger = fmt.Sprintf(" - you can trigger it by commenting on the PR with `%s`", trigger)
 				}
-				messages = append(messages, fmt.Sprintf("⚠️ Check Run `%s` is required but wasn't found%s\n", check, trigger))
+				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but wasn't found%s\n", check, trigger))
 			} else if checkRun.Conclusion == nil {
-				accessAllowed = false
-				messages = append(messages, fmt.Sprintf("⚠️ Check Run `%s` is required but is still in progress\n", check))
+				result.ChecksPassing = false
+				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but is still in progress\n", check))
 			} else if *checkRun.Conclusion != "success" {
-				accessAllowed = false
+				result.ChecksPassing = false
 				trigger := config.GetKnownTrigger(check)
 				if trigger != "" {
 					trigger = fmt.Sprintf(" - you can re-trigger it by commenting on the PR with `%s`", trigger)
 				}
-				messages = append(messages, fmt.Sprintf("⚠️ Check Run `%s` is required but didn't completed successfully%s\n", check, trigger))
+				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but didn't completed successfully%s\n", check, trigger))
 			} else if *checkRun.Conclusion == "success" {
-				messages = append(messages, fmt.Sprintf("✅ Check Run `%s` is required and has completed successfully\n", check))
+				result.AddMessage(fmt.Sprintf("✅ Check Run `%s` is required and has completed successfully\n", check))
 			}
 		}
 
-		// If the PR contains a skip CI label we'll allow access
+		// Check labels on the PR for overriding behaviour
 		for _, label := range pullRequest.Labels {
-			if strings.ToLower(*label.Name) == skipLabel {
-				accessAllowed = true
-				messages = append(messages, fmt.Sprintf("ℹ️ Pull Requests contains the `%s` label - **ignoring other requirements**", skipLabel))
-				break
+			switch strings.ToLower(*label.Name) {
+			case skipLabel:
+				result.SkipCI = true
+				result.AddMessage(fmt.Sprintf("ℹ️ Pull Requests contains the `%s` label - **ignoring other requirements**", skipLabel))
+			case doNotMergeHold:
+				result.HoldPR = true
+				result.AddMessage(fmt.Sprintf("⛔️ Pull Requests contains the `%s` label - **blocking merge until removed**", doNotMergeHold))
+			default:
+				continue
 			}
 		}
 	}
 
-	err = gh.AddCheck(!accessAllowed, strings.Join(messages, "\n"))
+	err = gh.AddCheck(!result.AllowAccess(), result.GetMessages())
 	if err != nil {
 		fmt.Println("Failed to add check run")
 		panic(err)
