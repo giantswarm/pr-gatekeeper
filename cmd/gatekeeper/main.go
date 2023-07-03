@@ -61,25 +61,29 @@ func main() {
 
 		for _, check := range repoConfig.RequiredChecks {
 			checkRun, err := gh.GetCheck(check)
-			if err != nil || checkRun == nil {
+			switch {
+			case err != nil || checkRun == nil:
 				result.ChecksPassing = false
 				trigger := config.GetKnownTrigger(check)
 				if trigger != "" {
 					trigger = fmt.Sprintf(" - you can trigger it by commenting on the PR with `%s`", trigger)
 				}
 				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but wasn't found%s\n", check, trigger))
-			} else if checkRun.Conclusion == nil {
+
+			case checkRun.Conclusion == nil:
 				result.ChecksPassing = false
 				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but is still in progress\n", check))
-			} else if *checkRun.Conclusion != "success" {
+
+			case *checkRun.Conclusion == "success":
+				result.AddMessage(fmt.Sprintf("✅ Check Run `%s` is required and has completed successfully\n", check))
+
+			default:
 				result.ChecksPassing = false
 				trigger := config.GetKnownTrigger(check)
 				if trigger != "" {
 					trigger = fmt.Sprintf(" - you can re-trigger it by commenting on the PR with `%s`", trigger)
 				}
 				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but didn't completed successfully%s\n", check, trigger))
-			} else if *checkRun.Conclusion == "success" {
-				result.AddMessage(fmt.Sprintf("✅ Check Run `%s` is required and has completed successfully\n", check))
 			}
 		}
 
