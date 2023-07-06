@@ -86,19 +86,19 @@ func main() {
 				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but didn't completed successfully%s\n", check, trigger))
 			}
 		}
+	}
 
-		// Check labels on the PR for overriding behaviour
-		for _, label := range pullRequest.Labels {
-			switch strings.ToLower(*label.Name) {
-			case skipLabel:
-				result.SkipCI = true
-				result.AddMessage(fmt.Sprintf("ℹ️ Pull Requests contains the `%s` label - **ignoring other requirements**", skipLabel))
-			case doNotMergeHold:
-				result.HoldPR = true
-				result.AddMessage(fmt.Sprintf("⛔️ Pull Requests contains the `%s` label - **blocking merge until removed**", doNotMergeHold))
-			default:
-				continue
-			}
+	// Check labels on the PR for overriding behaviour
+	for _, label := range pullRequest.Labels {
+		switch strings.ToLower(*label.Name) {
+		case skipLabel:
+			result.SkipCI = true
+			result.AddMessage(fmt.Sprintf("ℹ️ Pull Requests contains the `%s` label - **ignoring other requirements**", skipLabel))
+		case doNotMergeHold:
+			result.HoldPR = true
+			result.AddMessage(fmt.Sprintf("⛔️ Pull Requests contains the `%s` label - **blocking merge until removed**", doNotMergeHold))
+		default:
+			continue
 		}
 	}
 
