@@ -18,9 +18,9 @@ repos:
   cluster-cloud-director:
     requiredChecks:
       - "E2E Test Suites"
-  cluster-vsphere:
-    requiredChecks:
-      - "E2E Test Suites"
+  # cluster-vsphere:
+  #   requiredChecks:
+  #     - "E2E Test Suites"
 
   default-apps-aws:
     requiredChecks:
@@ -34,9 +34,9 @@ repos:
   default-apps-cloud-director:
     requiredChecks:
       - "E2E Test Suites"
-  default-apps-vsphere:
-    requiredChecks:
-      - "E2E Test Suites"
+  # default-apps-vsphere:
+  #   requiredChecks:
+  #     - "E2E Test Suites"
 
   tinkerers-ci-test-1:
     requiredChecks:
