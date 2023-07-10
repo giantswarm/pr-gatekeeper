@@ -107,3 +107,30 @@ func (c *Client) GetCheck(checkName string) (*github.CheckRun, error) {
 	}
 	return checks.CheckRuns[0], nil
 }
+
+func (c *Client) GetFiles() ([]*github.CommitFile, error) {
+	prNumber, err := strconv.Atoi(c.PR)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := &github.ListOptions{
+		PerPage: 100,
+	}
+
+	var allFiles []*github.CommitFile
+	for {
+		files, resp, err := c.PullRequests.ListFiles(c.Ctx, owner, c.Repo, prNumber, opts)
+		if err != nil {
+			return nil, err
+		}
+		allFiles = append(allFiles, files...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
+	}
+
+	return allFiles, nil
+}

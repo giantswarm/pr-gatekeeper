@@ -88,6 +88,24 @@ func main() {
 		}
 	}
 
+	if repoConfig.SkipDocsOnly {
+		fmt.Println("`SkipDocsOnly` is set to true, checking for changed file types")
+		files, err := gh.GetFiles()
+		if err != nil {
+			fmt.Println("Failed to get PRs files")
+			panic(err)
+		}
+		for _, file := range files {
+			fileName := strings.ToLower(file.GetFilename())
+			if !strings.HasSuffix(fileName, ".md") {
+				fmt.Printf("Non-markdown file found ('%s'), not skipping\n", fileName)
+				break
+			}
+		}
+		result.SkipCI = true
+		result.AddMessage("ℹ️ Pull Requests only contains Markdown changes and `skipDocsOnly` is set - **ignoring other requirements**")
+	}
+
 	// Check labels on the PR for overriding behaviour
 	for _, label := range pullRequest.Labels {
 		switch strings.ToLower(*label.Name) {

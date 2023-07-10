@@ -16,6 +16,7 @@ type Repos map[string]Repo
 
 type Repo struct {
 	RequiredChecks []string `json:"requiredChecks"`
+	SkipDocsOnly   bool     `json:"skipDocsOnly"`
 }
 
 func LoadConfig() (*Conf, error) {
