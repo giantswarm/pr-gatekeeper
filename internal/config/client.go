@@ -15,7 +15,8 @@ type KnownTriggers map[string]string
 type Repos map[string]Repo
 
 type Repo struct {
-	RequiredChecks []string `json:"requiredChecks"`
+	RequiredChecks   []string `json:"requiredChecks"`
+	IgnoreFilesMatch string   `json:"ignoreFilesMatch"`
 }
 
 func LoadConfig() (*Conf, error) {
