@@ -42,3 +42,9 @@ repos:
     requiredChecks:
       - "E2E Test Suites"
       - "Foo Bar"
+
+  mc-bootstrap:
+    requiredChecks:
+      - "Generate MC - capa / goten"
+      - "Generate MC - capz / goose"
+      # - "Generate MC - vsphere / gmc" # Not required until more stable
