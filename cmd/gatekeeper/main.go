@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/giantswarm/pr-gatekeeper/internal/config"
@@ -86,6 +87,30 @@ func main() {
 				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but didn't completed successfully%s\n", check, trigger))
 			}
 		}
+	}
+
+	if repoConfig.IgnoreFilesMatch != "" {
+		fmt.Println("`IgnoreFilesMatch` is set, checking for changed file types")
+		files, err := gh.GetFiles()
+		if err != nil {
+			fmt.Println("Failed to get PRs files")
+			panic(err)
+		}
+
+		for _, file := range files {
+			fileName := strings.ToLower(file.GetFilename())
+			matched, err := regexp.MatchString(repoConfig.IgnoreFilesMatch, fileName)
+			if err != nil {
+				fmt.Println("IgnoreFilesMatch regex failed")
+				panic(err)
+			}
+			if !matched {
+				fmt.Printf("Non-matching file found ('%s'), not skipping\n", fileName)
+				break
+			}
+		}
+		result.SkipCI = true
+		result.AddMessage("ℹ️ Pull Requests only contains Markdown changes and `skipDocsOnly` is set - **ignoring other requirements**")
 	}
 
 	// Check labels on the PR for overriding behaviour

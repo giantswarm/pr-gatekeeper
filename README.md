@@ -8,6 +8,7 @@ A PR check run that ensures requirements are met before allowing PRs to be merge
 - Allow skipping these checks by placing a `skip/ci` label on the PR
 - Allow blocking PR merge by adding a `do-not-merge/hold` label on the PR
 - Force a recheck by adding a comment to a PR containing the trigger `/recheck`
+- Configure files to ignore requiring checks for by providing a filename regex to `ignoreFilesMatch`
 
 ## How it works
 
