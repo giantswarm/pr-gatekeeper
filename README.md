@@ -39,7 +39,7 @@ CHECKS=$(curl -L \
   -H "Accept: application/vnd.github+json" \
   -H "Authorization: Bearer ${GITHUB_TOKEN}"\
   -H "X-GitHub-Api-Version: 2022-11-28" \
-  "https://api.github.com/repos/giantswarm/${REPO}/branches/${BRANCH}/protection/required_status_checks")
+  "https://api.github.com/repos/${REPO}/branches/${BRANCH}/protection/required_status_checks")
 
 CHECKS=$(echo ${CHECKS} | jq -r '.contexts += ["Heimdall - PR Gatekeeper"] | .checks += [{"context": "Heimdall - PR Gatekeeper","app_id": 284804}]')
 
@@ -48,4 +48,31 @@ curl -L -X PATCH \
   -H "Authorization: Bearer ${GITHUB_TOKEN}" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
   "https://api.github.com/repos/giantswarm/${REPO}/branches/${BRANCH}/protection/required_status_checks" -d ${CHECKS}
+```
+
+## Adding (or updating) the supported labels to a repository
+
+You will need a `GITHUB_TOKEN` environment variable set with a valid GitHub token.
+
+```
+REPO="giantswarm/cluster-aws" # Set this to the org/repo you want to add the labels too
+
+curl --silent --fail -L -X PATCH \
+  -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -H "Authorization: Bearer ${GITHUB_TOKEN}"\
+  "https://api.github.com/repos/${REPO}/labels/do-not-merge/hold" \
+  -d '{"name":"do-not-merge/hold","description":"Instructs pr-gatekeeper to prevent a PR from being merged while the label is present","color":"B60205"}' || \
+  curl --silent --fail -L -X POST \
+    -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -H "Authorization: Bearer ${GITHUB_TOKEN}"\
+    "https://api.github.com/repos/${REPO}/labels" \
+    -d '{"name":"do-not-merge/hold","description":"Instructs pr-gatekeeper to prevent a PR from being merged while the label is present","color":"B60205"}'
+
+
+curl --silent --fail -L -X PATCH \
+  -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -H "Authorization: Bearer ${GITHUB_TOKEN}"\
+  "https://api.github.com/repos/${REPO}/labels/skip/ci" \
+  -d '{"name":"skip/ci","description":"Instructs pr-gatekeeper to ignore any required PR checks","color":"1D76DB"}' || \
+  curl --silent --fail -L -X POST \
+    -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -H "Authorization: Bearer ${GITHUB_TOKEN}"\
+    "https://api.github.com/repos/${REPO}/labels" \
+    -d '{"name":"skip/ci","description":"Instructs pr-gatekeeper to ignore any required PR checks","color":"1D76DB"}'
 ```
