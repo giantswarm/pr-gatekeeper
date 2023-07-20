@@ -1,6 +1,6 @@
 module github.com/giantswarm/pr-gatekeeper
 
-go 1.19
+go 1.20
 
 require (
 	github.com/google/go-github/v53 v53.2.0
