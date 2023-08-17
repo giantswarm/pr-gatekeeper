@@ -3,7 +3,7 @@ module github.com/giantswarm/pr-gatekeeper
 go 1.20
 
 require (
-	github.com/google/go-github/v53 v53.2.0
+	github.com/google/go-github/v54 v54.0.0
 	golang.org/x/oauth2 v0.11.0
 	k8s.io/apimachinery v0.27.2
 )
