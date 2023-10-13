@@ -70,6 +70,8 @@ func main() {
 				}
 				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but wasn't found%s\n", check, trigger))
 
+				gh.AddRequiredCheck(check)
+
 			case checkRun.Conclusion == nil:
 				result.ChecksPassing = false
 				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but is still in progress\n", check))
@@ -105,6 +107,12 @@ func main() {
 	err = gh.AddCheck(!result.AllowAccess(), result.GetMessages())
 	if err != nil {
 		fmt.Println("Failed to add check run")
+		panic(err)
+	}
+
+	err = gh.AddComment(!result.AllowAccess(), result.GetMessages())
+	if err != nil {
+		fmt.Println("Failed to add comment")
 		panic(err)
 	}
 }

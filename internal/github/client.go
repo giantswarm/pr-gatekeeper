@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/google/go-github/v55/github"
 	"golang.org/x/oauth2"
@@ -84,6 +86,17 @@ func (c *Client) AddCheck(pending bool, msg string) error {
 	return err
 }
 
+func (c *Client) AddRequiredCheck(name string) error {
+	status := "queued"
+	_, _, err := c.Checks.CreateCheckRun(c.Ctx, owner, c.Repo, github.CreateCheckRunOptions{
+		Name:       name,
+		HeadSHA:    c.Sha,
+		Status:     &status,
+		Conclusion: nil,
+	})
+	return err
+}
+
 func getConclusion(pending bool) *string {
 	if pending {
 		return nil
@@ -106,4 +119,65 @@ func (c *Client) GetCheck(checkName string) (*github.CheckRun, error) {
 		return nil, nil
 	}
 	return checks.CheckRuns[0], nil
+}
+
+func (c *Client) AddComment(pending bool, msg string) error {
+	prNumber, _ := strconv.Atoi(c.PR)
+
+	emoji := ":stop_sign:"
+	if !pending {
+		emoji = ":white_check_mark:"
+	}
+
+	hiddenString := "<!-- PR Gatekeeper Comment -->"
+	title := fmt.Sprintf("\n# %s Heimdall - PR Gatekeeper\n\n---\n\n", emoji)
+	details := fmt.Sprintf(`<!-- DETAILS_START -->
+%s
+<!-- DETAILS_END -->`, msg)
+	footer := `
+---
+
+_Source: https://github.com/giantswarm/pr-gatekeeper_ | _Repo Config: https://github.com/giantswarm/pr-gatekeeper/blob/main/config.yaml_`
+
+	commentBody := hiddenString + title + details + footer
+
+	comments, _, err := c.Issues.ListComments(c.Ctx, owner, c.Repo, prNumber, &github.IssueListCommentsOptions{})
+	if err != nil {
+		return err
+	}
+	for _, comment := range comments {
+		if strings.Contains(*comment.Body, hiddenString) {
+			if *comment.Body == commentBody {
+				// No update needed
+				return nil
+			}
+
+			re := regexp.MustCompile(`(?ms)<!-- DETAILS_START -->(.+)<!-- DETAILS_END -->`)
+			match := re.FindStringSubmatch(*comment.Body)
+
+			if len(match) > 1 {
+				history := "\n\n---\n\n<details><summary>History</summary>\n" + match[1]
+
+				re = regexp.MustCompile(`(?ms)<details><summary>History</summary>(.+)</details>`)
+				match = re.FindStringSubmatch(*comment.Body)
+				if len(match) > 1 {
+					history += "\n\n" + match[1] + "\n\n"
+				}
+
+				history += "</details>\n\n"
+				commentBody = hiddenString + title + details + history + footer
+			}
+
+			_, _, err = c.Issues.EditComment(c.Ctx, owner, c.Repo, *comment.ID, &github.IssueComment{
+				Body: &commentBody,
+			})
+			return err
+		}
+	}
+
+	_, _, err = c.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, &github.IssueComment{
+		Body: &commentBody,
+	})
+
+	return err
 }
