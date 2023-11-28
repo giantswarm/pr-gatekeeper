@@ -47,4 +47,4 @@ repos:
     requiredChecks:
       - "Generate MC - capa / goten"
       - "Generate MC - capz / goose"
-      # - "Generate MC - vsphere / gmc" # Not required until more stable
+      - "Generate MC - vsphere / gmc"
