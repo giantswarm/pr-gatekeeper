@@ -28,7 +28,7 @@ spec:
   # Optional
   - name: IMAGE
     type: string
-    default: "quay.io/giantswarm/pr-gatekeeper:latest"
+    default: "gsoci.azurecr.io/giantswarm/pr-gatekeeper:latest"
 
   - name: GITHUB_TOKEN_SECRET
     type: string
