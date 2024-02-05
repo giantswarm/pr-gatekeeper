@@ -35,6 +35,18 @@ spec:
     description: The name of the secret containing the GitHub authentication credentials.
     default: tinkerers-ci-github-token
 
+  stepTemplate:
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+      privileged: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+
   steps:
     - name: heimdall
       image: $(params.IMAGE)

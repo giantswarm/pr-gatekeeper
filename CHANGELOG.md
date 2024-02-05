@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added the commit hash to the details to make it clearer its not related to the PR as a whole
 * Added support for the `do-not-merge/hold` label to block merging.
 * Added `mc-bootstrap` required checks
+* Added `securityContext` to Tekton Tasks
 
 ### Changed
 
