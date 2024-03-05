@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/google/go-github/v59 v59.0.0
-	golang.org/x/oauth2 v0.17.0
+	golang.org/x/oauth2 v0.18.0
 	k8s.io/apimachinery v0.28.3
 )
 
