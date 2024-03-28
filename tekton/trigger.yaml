@@ -30,7 +30,7 @@ spec:
         name: "cel"
       params:
       - name: filter
-        value: "has(body.check_run) ? body.check_run.name != 'Heimdall - PR Gatekeeper' : true"
+        value: "has(body.check_run) ? (body.check_run.name != 'Heimdall - PR Gatekeeper && body.check_run.app.slug != 'github-actions') : true"
     - name: add-pr-number
       ref:
         name: "cel"
