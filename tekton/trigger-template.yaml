@@ -38,3 +38,4 @@ spec:
               type: RuntimeDefault
           imagePullSecrets:
             - name: quay-imagepull-secret
+            - name: gsociprivate-pull-secret
