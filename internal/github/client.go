@@ -118,7 +118,7 @@ func (c *Client) FilePresentInRepo(filepath string) (bool) {
 
 	if err != nil {
 		if resp != nil && resp.StatusCode == http.StatusNotFound {
-			fmt.Printf("'%s' does NOT exists in `%s`\n", filepath, c.Repo)
+			fmt.Printf("'%s' doesn't exist in `%s`\n", filepath, c.Repo)
 			return false
 		} else {
 			fmt.Printf(" Error occured while checking for '%s' in `%s`\n", filepath, c.Repo)
