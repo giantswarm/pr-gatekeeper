@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"net/http"
 
 	"github.com/google/go-github/v62/github"
 	"golang.org/x/oauth2"
@@ -106,4 +107,25 @@ func (c *Client) GetCheck(checkName string) (*github.CheckRun, error) {
 		return nil, nil
 	}
 	return checks.CheckRuns[0], nil
+}
+
+
+func (c *Client) FilePresentInRepo(filepath string) (bool) {
+	
+	_, _, resp, err := c.Repositories.GetContents(c.Ctx, owner, c.Repo, filepath, &github.RepositoryContentGetOptions{
+			Ref: c.Sha,
+		})
+
+	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			fmt.Printf("'%s' does NOT exists in `%s`\n", filepath, c.Repo)
+			return false
+		} else {
+			fmt.Printf(" Error occured while checking for '%s' in `%s`\n", filepath, c.Repo)
+			return false
+		}
+	} else {
+		fmt.Printf("'%s' exists in `%s`\n", filepath, c.Repo)
+		return true
+	}
 }

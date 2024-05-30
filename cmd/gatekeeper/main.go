@@ -13,6 +13,7 @@ import (
 const (
 	skipLabel      = "skip/ci"
 	doNotMergeHold = "do-not-merge/hold"
+	e2eTestConfigFile    = "./tests/e2e/config.yaml"
 )
 
 var (
@@ -51,6 +52,17 @@ func main() {
 	if err != nil {
 		fmt.Println("Failed to load repo config")
 		panic(err)
+	}
+
+	// Check if config file is present in the github repo. If present automatically add the E2E Test Suites check
+	configFileInRepo := gh.FilePresentInRepo(e2eTestConfigFile)
+	if configFileInRepo {
+		fmt.Println("'E2E Test Suites' check automatically added to the required checks")
+		if repoConfig == nil {
+			repoConfig = &config.Repo{RequiredChecks: []string{"E2E Test Suites"}}
+		}else{
+			repoConfig.RequiredChecks = append(repoConfig.RequiredChecks, "E2E Test Suites")
+		}
 	}
 
 	if repoConfig == nil {
