@@ -3,9 +3,9 @@ package github
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
-	"net/http"
 
 	"github.com/google/go-github/v62/github"
 	"golang.org/x/oauth2"
