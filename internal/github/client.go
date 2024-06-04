@@ -110,7 +110,7 @@ func (c *Client) GetCheck(checkName string) (*github.CheckRun, error) {
 }
 
 
-func (c *Client) FilePresentInRepo(filepath string) (bool) {
+func (c *Client) FilePresentInRepo(filepath string) (bool, error) {
 	
 	_, _, resp, err := c.Repositories.GetContents(c.Ctx, owner, c.Repo, filepath, &github.RepositoryContentGetOptions{
 			Ref: c.Sha,
@@ -119,13 +119,13 @@ func (c *Client) FilePresentInRepo(filepath string) (bool) {
 	if err != nil {
 		if resp != nil && resp.StatusCode == http.StatusNotFound {
 			fmt.Printf("'%s' doesn't exist in `%s`\n", filepath, c.Repo)
-			return false
+			return false, nil
 		} else {
 			fmt.Printf(" Error occured while checking for '%s' in `%s`\n", filepath, c.Repo)
-			return false
+			return false, err
 		}
 	} else {
 		fmt.Printf("'%s' exists in `%s`\n", filepath, c.Repo)
-		return true
+		return true, nil
 	}
 }

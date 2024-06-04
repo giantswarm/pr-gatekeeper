@@ -55,7 +55,11 @@ func main() {
 	}
 
 	// Check if config file is present in the github repo. If present automatically add the E2E Test Suites check
-	configFileInRepo := gh.FilePresentInRepo(e2eTestConfigFile)
+	configFileInRepo, err := gh.FilePresentInRepo(e2eTestConfigFile)
+	if err != nil {
+		fmt.Println("Failed to check repo for config file")
+		panic(err)
+	}
 	if configFileInRepo {
 		fmt.Println("'E2E Test Suites' check automatically added to the required checks")
 		if repoConfig == nil {
