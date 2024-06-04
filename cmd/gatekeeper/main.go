@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	skipLabel                  = "skip/ci"
-	doNotMergeHold     = "do-not-merge/hold"
-	e2eTestConfigFile    = "./tests/e2e/config.yaml"
+	skipLabel         = "skip/ci"
+	doNotMergeHold    = "do-not-merge/hold"
+	e2eTestConfigFile = "./tests/e2e/config.yaml"
 )
 
 var (
