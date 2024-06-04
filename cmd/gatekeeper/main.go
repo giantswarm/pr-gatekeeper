@@ -59,10 +59,9 @@ func main() {
 	if configFileInRepo {
 		fmt.Println("'E2E Test Suites' check automatically added to the required checks")
 		if repoConfig == nil {
-			repoConfig = &config.Repo{RequiredChecks: []string{"E2E Test Suites"}}
-		}else{
-			repoConfig.RequiredChecks = append(repoConfig.RequiredChecks, "E2E Test Suites")
+			repoConfig = &config.Repo{RequiredChecks: []string{}}
 		}
+		repoConfig.RequiredChecks = append(repoConfig.RequiredChecks, "E2E Test Suites")
 	}
 
 	if repoConfig == nil {
