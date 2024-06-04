@@ -109,12 +109,11 @@ func (c *Client) GetCheck(checkName string) (*github.CheckRun, error) {
 	return checks.CheckRuns[0], nil
 }
 
-
 func (c *Client) FilePresentInRepo(filepath string) (bool, error) {
-	
+
 	_, _, resp, err := c.Repositories.GetContents(c.Ctx, owner, c.Repo, filepath, &github.RepositoryContentGetOptions{
-			Ref: c.Sha,
-		})
+		Ref: c.Sha,
+	})
 
 	if err != nil {
 		if resp != nil && resp.StatusCode == http.StatusNotFound {
