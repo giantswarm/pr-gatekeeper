@@ -49,7 +49,3 @@ repos:
       - "Generate MC - capz / goose"
       - "Generate MC - vsphere / gmc"
       - "Generate MC - cloud-director / goshawk"
-
-  apptest-framework:
-    requiredChecks:
-      - "App E2E Test Suites - capa"

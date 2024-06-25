@@ -3,7 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
+
+	apptest "github.com/giantswarm/apptest-framework/pkg/config"
+	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/giantswarm/pr-gatekeeper/internal/config"
 	"github.com/giantswarm/pr-gatekeeper/internal/github"
@@ -11,9 +15,10 @@ import (
 )
 
 const (
-	skipLabel         = "skip/ci"
-	doNotMergeHold    = "do-not-merge/hold"
-	e2eTestConfigFile = "./tests/e2e/config.yaml"
+	skipLabel          = "skip/ci"
+	doNotMergeHold     = "do-not-merge/hold"
+	e2eTestConfigFile  = "./tests/e2e/config.yaml"
+	appTestCheckPrefix = "App E2E Test Suites"
 )
 
 var (
@@ -55,17 +60,30 @@ func main() {
 	}
 
 	// Check if config file is present in the github repo. If present automatically add the E2E Test Suites check
-	configFileInRepo, err := gh.FilePresentInRepo(e2eTestConfigFile)
+	configFile, ok, err := gh.GetFile(e2eTestConfigFile)
 	if err != nil {
 		fmt.Println("Failed to check repo for config file")
 		panic(err)
 	}
-	if configFileInRepo {
-		fmt.Println("'E2E Test Suites' check automatically added to the required checks")
+	if ok {
 		if repoConfig == nil {
 			repoConfig = &config.Repo{RequiredChecks: []string{}}
 		}
-		repoConfig.RequiredChecks = append(repoConfig.RequiredChecks, "E2E Test Suites")
+
+		apptestConfig := &apptest.TestConfig{}
+		err = yaml.Unmarshal([]byte(configFile), apptestConfig)
+		if err != nil {
+			fmt.Println("Failed to parse app test config file")
+			panic(err)
+		}
+
+		for _, provider := range apptestConfig.Providers {
+			checkName := fmt.Sprintf("%s - %s", appTestCheckPrefix, strings.ToLower(provider))
+			if !slices.Contains(repoConfig.RequiredChecks, checkName) {
+				fmt.Printf("Adding the '%s' required check\n", checkName)
+				repoConfig.RequiredChecks = append(repoConfig.RequiredChecks, checkName)
+			}
+		}
 	}
 
 	if repoConfig == nil {
