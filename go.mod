@@ -2,7 +2,7 @@ module github.com/giantswarm/pr-gatekeeper
 
 go 1.22.3
 
-toolchain go1.22.4
+toolchain go1.22.5
 
 require (
 	github.com/giantswarm/apptest-framework v1.5.0
