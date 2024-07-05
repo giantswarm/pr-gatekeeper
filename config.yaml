@@ -1,5 +1,6 @@
 knownTriggers:
   "E2E Test Suites": "/run cluster-test-suites"
+  "Release Test Suites": "/run releases-test-suites"
 
 repos:
   cluster-test-suites:
@@ -49,3 +50,7 @@ repos:
       - "Generate MC - capz / goose"
       - "Generate MC - vsphere / gmc"
       - "Generate MC - cloud-director / goshawk"
+
+  releases:
+    requiredChecks:
+      - "Release Test Suites"
