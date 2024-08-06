@@ -31,6 +31,12 @@ spec:
       params:
       - name: filter
         value: "has(body.check_run) ? (body.check_run.name != 'Heimdall - PR Gatekeeper' && body.check_run.app.slug != 'github-actions') : true"
+    - name: ignore-irrelevant-pr-actions
+      ref:
+        name: "cel"
+      params:
+      - name: filter
+        value: "has(body.action) ? (body.action != 'auto_merge_enabled' && body.action != 'auto_merge_disabled' && body.action != 'review_requested' && body.action != 'ready_for_review' && body.action != 'assigned' && body.action != 'closed') : true"
     - name: add-pr-number
       ref:
         name: "cel"
