@@ -3,7 +3,7 @@ module github.com/giantswarm/pr-gatekeeper
 go 1.23.1
 
 require (
-	github.com/giantswarm/apptest-framework v1.10.0
+	github.com/giantswarm/apptest-framework v1.10.1
 	github.com/google/go-github/v65 v65.0.0
 	golang.org/x/oauth2 v0.23.0
 	k8s.io/apimachinery v0.31.1
