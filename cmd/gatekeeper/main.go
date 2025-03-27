@@ -178,16 +178,6 @@ func main() {
 			}
 		}
 
-		// Inform the user if a `/skip-ci` trigger comment was found but it was made before the latest commit
-		if !result.SkipCI && oldSkipFound {
-			result.AddMessage("⚠️ A `/skip-ci` trigger comment was found but it was made before the latest commit, ignoring")
-		}
-
-		if !result.SkipCI && skipWithoutReasonFound {
-			result.AddMessage("⚠️ A reason must be provided when using the `/skip-ci` trigger comment, ignoring")
-			_ = gh.AddReasonRequiredComment()
-		}
-
 		if result.SkipCI {
 			result.AddMessage(
 				fmt.Sprintf("⏭️ Pull Request contains a `/skip-ci` trigger comment - **ignoring other requirements**\n\nSkip reason: `%s`\nSkipped by: @%s",
@@ -196,13 +186,29 @@ func main() {
 				),
 			)
 
+			_ = gh.AddSkipCILabel()
+
 			// Add a comment to the PR to inform everyone that the CI checks were skipped.
 			// We are ok with this failing as the info will be on the GitHub Check too
 			_ = gh.AddSkippingComment(skipReason, skippedBy)
-		}
+		} else {
+			_ = gh.RemoveSkipCILabel()
 
-		if !result.SkipCI && !oldSkipFound && !skipWithoutReasonFound && hasDeprecatedSkipLabel {
-			_ = gh.AddSkipLabelDeprecatedComment()
+			// Inform the user if a `/skip-ci` trigger comment was found but it was made before the latest commit
+			if oldSkipFound {
+				result.AddMessage("⚠️ A `/skip-ci` trigger comment was found but it was made before the latest commit, ignoring")
+			}
+
+			// Inform the user if a `/skip-ci` trigger comment was found but without a reason given
+			if skipWithoutReasonFound {
+				result.AddMessage("⚠️ A reason must be provided when using the `/skip-ci` trigger comment, ignoring")
+				_ = gh.AddReasonRequiredComment()
+			}
+
+			//Inform user that only using the `skip/ci` label is no longer supported
+			if !oldSkipFound && !skipWithoutReasonFound && hasDeprecatedSkipLabel {
+				_ = gh.AddSkipLabelDeprecatedComment()
+			}
 		}
 	}
 

@@ -272,3 +272,23 @@ func (c *Client) AddSkipLabelDeprecatedComment() error {
 	_, _, err = c.Client.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, &github.IssueComment{Body: &commentMessage})
 	return err
 }
+
+func (c *Client) AddSkipCILabel() error {
+	prNumber, err := strconv.Atoi(c.PR)
+	if err != nil {
+		return err
+	}
+
+	_, _, err = c.Client.Issues.AddLabelsToIssue(c.Ctx, owner, c.Repo, prNumber, []string{"skip/ci"})
+	return err
+}
+
+func (c *Client) RemoveSkipCILabel() error {
+	prNumber, err := strconv.Atoi(c.PR)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.Client.Issues.RemoveLabelForIssue(c.Ctx, owner, c.Repo, prNumber, "skip/ci")
+	return err
+}
