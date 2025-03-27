@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added support for the `do-not-merge/hold` label to block merging.
 * Added `mc-bootstrap` required checks
 * Added `securityContext` to Tekton Tasks
+* Implement support for `/skip-ci [reason]` comment trigger to replace old `skip/ci` label
 
 ### Changed
 
@@ -29,3 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Bumped Go to v1.20
 * Migrated image registry to ACR
 * Automatically add "E2E Test Suites" required check when ./tests/e2e/config.yaml present in repo.
+
+### Removed
+
+* Removed support of using the `skip/ci` label for bypassing the gatekeeper - replaced with the `/skip-ci [reason]` comment trigger

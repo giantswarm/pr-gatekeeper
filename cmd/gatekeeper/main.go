@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -122,16 +123,86 @@ func main() {
 	}
 
 	// Check labels on the PR for overriding behaviour
+	hasDeprecatedSkipLabel := false
 	for _, label := range pullRequest.Labels {
 		switch strings.ToLower(*label.Name) {
 		case skipLabel:
-			result.SkipCI = true
-			result.AddMessage(fmt.Sprintf("ℹ️ Pull Requests contains the `%s` label - **ignoring other requirements**", skipLabel))
+			fmt.Println("The use of the skip/ci label is deprecated, please use the /skip-ci comment trigger instead")
+			result.AddMessage(fmt.Sprintf("ℹ️ Please note: The `%s` label no longer controls skipping the CI checks and is now purely informational. Please use the `/skip-ci [reason]` comment trigger with a required reason message.", skipLabel))
+			hasDeprecatedSkipLabel = true
 		case doNotMergeHold:
 			result.HoldPR = true
 			result.AddMessage(fmt.Sprintf("⛔️ Pull Requests contains the `%s` label - **blocking merge until removed**", doNotMergeHold))
 		default:
 			continue
+		}
+	}
+
+	// Handle skipping CI via `/skip-ci [MESSAGE]` comment trigger
+	{
+		skipTriggerComment := regexp.MustCompile(`(?mi)^\/skip-ci (?P<reason>.+)(?:\r|\n|$)`)
+		skipTriggerCommentWithoutMessage := regexp.MustCompile(`(?mi)^\/skip-ci\s?(?:\r|\n|$)`)
+
+		latestCommitTime, err := gh.GetLastCommitTimestamp()
+		if err != nil {
+			fmt.Println("Failed to get last commit timestamp, unable to perform check for skip trigger comments")
+		}
+		comments, err := gh.GetPRComments()
+		if err != nil {
+			fmt.Println("Failed to get PR Comments, unable to perform check for skip trigger comments")
+		}
+
+		oldSkipFound := false
+		skipWithoutReasonFound := false
+		skipReason := ""
+		skippedBy := ""
+
+		if latestCommitTime != nil && comments != nil {
+			for _, comment := range comments {
+				if comment.AuthorAssociation != nil && (*comment.AuthorAssociation == "OWNER" || *comment.AuthorAssociation == "MEMBER") && comment.Body != nil && *comment.Body != "" {
+					triggerMatches := skipTriggerComment.FindAllStringSubmatch(*comment.Body, -1)
+					triggerMatchesWihthoutMessage := skipTriggerCommentWithoutMessage.FindAllStringSubmatch(*comment.Body, -1)
+					if len(triggerMatches) > 0 {
+						if comment.CreatedAt.After(latestCommitTime.Time) {
+							result.SkipCI = true
+							skipReason = triggerMatches[0][1]
+							skippedBy = comment.User.GetLogin()
+						} else {
+							oldSkipFound = true
+							fmt.Println("A `/skip-ci` trigger comment was found but it was made before the last commit, ignoring")
+						}
+					} else if len(triggerMatchesWihthoutMessage) > 0 {
+						skipWithoutReasonFound = true
+					}
+				}
+			}
+		}
+
+		// Inform the user if a `/skip-ci` trigger comment was found but it was made before the latest commit
+		if !result.SkipCI && oldSkipFound {
+			result.AddMessage("⚠️ A `/skip-ci` trigger comment was found but it was made before the latest commit, ignoring")
+		}
+
+		if !result.SkipCI && skipWithoutReasonFound {
+			result.AddMessage("⚠️ A reason must be provided when using the `/skip-ci` trigger comment, ignoring")
+			_ = gh.AddReasonRequiredComment()
+		}
+
+		if result.SkipCI {
+			result.AddMessage(
+				fmt.Sprintf("⏭️ Pull Request contains a `/skip-ci` trigger comment - **ignoring other requirements**\n\nSkip reason: `%s`\nSkipped by: @%s",
+					skipReason,
+					skippedBy,
+				),
+			)
+
+			// Add a comment to the PR to inform everyone that the CI checks were skipped.
+			// We are ok with this failing as the info will be on the GitHub Check too
+			_ = gh.AddSkippingComment(skipReason, skippedBy)
+		}
+
+		if !result.SkipCI && !oldSkipFound && !skipWithoutReasonFound && hasDeprecatedSkipLabel {
+			_ = gh.AddSkipLabelDeprecatedComment()
 		}
 	}
 
