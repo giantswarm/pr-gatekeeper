@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * Correctly check for the require App Test checks for each provider when ./tests/e2e/config.yaml present in repo.
+* Fix linting issues.
 
 ### Added
 

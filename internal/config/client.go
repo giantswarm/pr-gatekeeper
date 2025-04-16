@@ -23,7 +23,7 @@ func LoadConfig() (*Conf, error) {
 	if configFile == "" {
 		configFile = "config.yaml"
 	}
-	file, err := os.ReadFile(configFile)
+	file, err := os.ReadFile(configFile) // nolint:gosec
 	if err != nil {
 		return nil, err
 	}
