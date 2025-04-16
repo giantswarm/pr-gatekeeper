@@ -203,7 +203,7 @@ func (c *Client) AddSkippingComment(reason, user string) error {
 		}
 	}
 
-	_, _, err = c.Client.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, &github.IssueComment{Body: &commentMessage})
+	_, _, err = c.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, &github.IssueComment{Body: &commentMessage})
 	return err
 }
 
@@ -236,7 +236,7 @@ func (c *Client) AddReasonRequiredComment() error {
 		}
 	}
 
-	_, _, err = c.Client.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, &github.IssueComment{Body: &commentMessage})
+	_, _, err = c.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, &github.IssueComment{Body: &commentMessage})
 	return err
 }
 
@@ -269,7 +269,7 @@ func (c *Client) AddSkipLabelDeprecatedComment() error {
 		}
 	}
 
-	_, _, err = c.Client.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, &github.IssueComment{Body: &commentMessage})
+	_, _, err = c.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, &github.IssueComment{Body: &commentMessage})
 	return err
 }
 
@@ -279,7 +279,7 @@ func (c *Client) AddSkipCILabel() error {
 		return err
 	}
 
-	_, _, err = c.Client.Issues.AddLabelsToIssue(c.Ctx, owner, c.Repo, prNumber, []string{"skip/ci"})
+	_, _, err = c.Issues.AddLabelsToIssue(c.Ctx, owner, c.Repo, prNumber, []string{"skip/ci"})
 	return err
 }
 
@@ -289,6 +289,6 @@ func (c *Client) RemoveSkipCILabel() error {
 		return err
 	}
 
-	_, err = c.Client.Issues.RemoveLabelForIssue(c.Ctx, owner, c.Repo, prNumber, "skip/ci")
+	_, err = c.Issues.RemoveLabelForIssue(c.Ctx, owner, c.Repo, prNumber, "skip/ci")
 	return err
 }
