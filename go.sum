@@ -1,6 +1,6 @@
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
-github.com/giantswarm/apptest-framework/v2 v2.0.1 h1:zRPf+KaTxRX/7aqkRifLJmNO5igBKVlpFfW09D8uuGw=
-github.com/giantswarm/apptest-framework/v2 v2.0.1/go.mod h1:pmcVfiqb3QRANlK1Ml+Qg/J3foXHlJcEthB1LaWEw5E=
+github.com/giantswarm/apptest-framework/v2 v2.0.2 h1:aqYPs2uLPzDoc5qOmEgjWnmkWZY4pNFbIk7a4b1Y8EA=
+github.com/giantswarm/apptest-framework/v2 v2.0.2/go.mod h1:ZO+G40pNeyMLorNU8gvrx++LrwMaZ8/q7z6uiDm2XOo=
 github.com/google/go-cmp v0.5.2/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
