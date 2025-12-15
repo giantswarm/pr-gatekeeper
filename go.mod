@@ -1,6 +1,6 @@
 module github.com/giantswarm/pr-gatekeeper
 
-go 1.25.4
+go 1.25.5
 
 require (
 	github.com/giantswarm/apptest-framework/v2 v2.1.3
