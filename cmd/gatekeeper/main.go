@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	apptest "github.com/giantswarm/apptest-framework/v2/pkg/config"
+	apptest "github.com/giantswarm/apptest-framework/v3/pkg/config"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/giantswarm/pr-gatekeeper/internal/config"
