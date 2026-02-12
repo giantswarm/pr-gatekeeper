@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added `mc-bootstrap` required checks
 * Added `securityContext` to Tekton Tasks
 * Implement support for `/skip-ci [reason]` comment trigger to replace old `skip/ci` label
+* Added `E2E Test Suites` required check for `cluster-eks`
 
 ### Changed
 
