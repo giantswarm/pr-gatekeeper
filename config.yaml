@@ -10,6 +10,9 @@ repos:
   cluster-aws:
     requiredChecks:
       - "E2E Test Suites"
+  cluster-eks:
+    requiredChecks:
+      - "E2E Test Suites"
   cluster-azure:
     requiredChecks:
       - "E2E Test Suites"
