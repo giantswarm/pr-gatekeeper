@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v85/github"
+	"github.com/google/go-github/v86/github"
 	"golang.org/x/oauth2"
 )
 
@@ -190,12 +190,12 @@ func (c *Client) AddSkippingComment(reason, user string) error {
 					"classifier": "OUTDATED",
 				}
 
-				req, _ := c.NewRequest("POST", "https://api.github.com/graphql", map[string]interface{}{
+				req, _ := c.NewRequest(c.Ctx, "POST", "https://api.github.com/graphql", map[string]interface{}{
 					"query":     query,
 					"variables": variables,
 				})
 				var result map[string]interface{}
-				_, err := c.Do(c.Ctx, req, &result)
+				_, err := c.Do(req, &result)
 				if err != nil {
 					fmt.Println("Failed to mark comment as outdated")
 				}

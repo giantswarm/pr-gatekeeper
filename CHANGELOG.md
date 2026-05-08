@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Bumped Go to v1.20
 * Migrated image registry to ACR
 * Automatically add "E2E Test Suites" required check when ./tests/e2e/config.yaml present in repo.
+* Go: Update dependencies.
 
 ### Removed
 
