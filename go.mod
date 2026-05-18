@@ -6,7 +6,7 @@ require (
 	github.com/giantswarm/apptest-framework/v5 v5.0.1
 	github.com/google/go-github/v86 v86.0.0
 	golang.org/x/oauth2 v0.36.0
-	k8s.io/apimachinery v0.36.0
+	k8s.io/apimachinery v0.36.1
 )
 
 require (
