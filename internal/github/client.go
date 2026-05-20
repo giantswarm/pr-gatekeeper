@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v86/github"
+	"github.com/google/go-github/v87/github"
 	"golang.org/x/oauth2"
 )
 
@@ -35,8 +35,12 @@ func New(repo, pr string) Client {
 	oClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
 	))
+	ghClient, err := github.NewClient(github.WithHTTPClient(oClient))
+	if err != nil {
+		panic(err)
+	}
 	return Client{
-		github.NewClient(oClient),
+		ghClient,
 
 		ctx,
 		repo,
