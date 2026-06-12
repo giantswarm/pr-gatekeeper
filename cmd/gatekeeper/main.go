@@ -20,7 +20,32 @@ const (
 	doNotMergeHold     = "do-not-merge/hold"
 	e2eTestConfigFile  = "./tests/e2e/config.yaml"
 	appTestCheckPrefix = "App E2E Test Suites"
+	generateMCPrefix   = "Generate MC - "
+	releasesRepo       = "releases"
 )
+
+// releaseProviderDirs maps top-level directories in the giantswarm/releases
+// repo to the provider token used in the "Generate MC - <provider> /
+// <installation>" check posted by the build-image-generate-mc pipeline (see
+// giantswarm/tekton-resources). Only "azure" differs from its directory name
+// (it maps to the capz token). EKS is intentionally excluded for now as it has
+// no dedicated test MC.
+var releaseProviderDirs = map[string]string{
+	"capa":           "capa",
+	"azure":          "capz",
+	"vsphere":        "vsphere",
+	"cloud-director": "cloud-director",
+}
+
+// providerTestMC is the fixed test MC used for each provider's MC creation
+// test, used only to build the helpful trigger hint shown when the check is
+// missing.
+var providerTestMC = map[string]string{
+	"capa":           "goten",
+	"capz":           "goose",
+	"vsphere":        "gmc",
+	"cloud-director": "goshawk",
+}
 
 var (
 	repo string
@@ -122,6 +147,15 @@ func main() {
 		}
 	}
 
+	// For the releases repo, require that an MC creation test has run for at
+	// least one provider updated in this PR. This catches releases that break
+	// MC creation before they are merged. Running it for any one affected
+	// provider is enough; the test pass/fail result does not block merging
+	// (only MC creation failures do, via the "Generate MC" check conclusion).
+	if repo == releasesRepo {
+		checkReleaseMCTests(&gh, result)
+	}
+
 	// Check labels on the PR for overriding behaviour
 	hasDeprecatedSkipLabel := false
 	for _, label := range pullRequest.Labels {
@@ -217,4 +251,68 @@ func main() {
 		fmt.Println("Failed to add check run")
 		panic(err)
 	}
+}
+
+// checkReleaseMCTests requires that an MC creation test ("Generate MC - <provider> /
+// <installation>") has completed successfully for at least one provider updated
+// in the releases PR. Providers without a dedicated test MC (e.g. EKS) are
+// ignored. If the PR updates no MC-testable provider, the gate is skipped.
+func checkReleaseMCTests(gh *github.Client, result *results.Result) {
+	changedFiles, err := gh.GetChangedFiles()
+	if err != nil {
+		fmt.Println("Failed to list changed files for releases PR")
+		panic(err)
+	}
+
+	affected := map[string]bool{}
+	providers := []string{}
+	for _, file := range changedFiles {
+		topDir, _, _ := strings.Cut(file, "/")
+		provider, ok := releaseProviderDirs[topDir]
+		if !ok || affected[provider] {
+			continue
+		}
+		affected[provider] = true
+		providers = append(providers, provider)
+	}
+	slices.Sort(providers)
+
+	if len(providers) == 0 {
+		result.AddMessage("ℹ️ No MC-testable provider changes detected - skipping MC creation test check\n")
+		return
+	}
+
+	// Look for a successful MC creation test for any affected provider.
+	checks, err := gh.GetAllChecks()
+	if err != nil {
+		fmt.Println("Failed to list check runs for releases PR")
+		panic(err)
+	}
+	for _, check := range checks {
+		name := check.GetName()
+		if !strings.HasPrefix(name, generateMCPrefix) {
+			continue
+		}
+		provider, _, found := strings.Cut(strings.TrimPrefix(name, generateMCPrefix), " / ")
+		provider = strings.TrimSpace(provider)
+		if !found || !affected[provider] {
+			continue
+		}
+		if check.Conclusion != nil && *check.Conclusion == "success" {
+			result.AddMessage(fmt.Sprintf("✅ MC creation test has run successfully for updated provider `%s`\n", provider))
+			return
+		}
+	}
+
+	result.ChecksPassing = false
+	hints := []string{}
+	for _, provider := range providers {
+		if mc, ok := providerTestMC[provider]; ok {
+			hints = append(hints, fmt.Sprintf("`/run generate-mc PROVIDER=%s INSTALLATION=%s`", provider, mc))
+		}
+	}
+	result.AddMessage(fmt.Sprintf("⚠️ An MC creation test must be run for at least one provider updated in this PR (%s) before merging - trigger it by commenting:\n%s\n",
+		strings.Join(providers, ", "),
+		strings.Join(hints, "\n"),
+	))
 }

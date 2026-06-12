@@ -54,6 +54,9 @@ repos:
       - "Generate MC - vsphere / gmc"
       - "Generate MC - cloud-director / goshawk"
 
+  # In addition to the static checks below, an MC creation test ("Generate MC -
+  # <provider>") must have run successfully for at least one provider updated in
+  # the PR. This is enforced dynamically in cmd/gatekeeper/main.go.
   releases:
     requiredChecks:
       - "Release Test Suites"
