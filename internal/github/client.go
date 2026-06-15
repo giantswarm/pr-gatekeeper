@@ -81,6 +81,47 @@ func (c *Client) GetLastCommitTimestamp() (*github.Timestamp, error) {
 	return latestCommit.Commit.Committer.Date, nil
 }
 
+func (c *Client) GetChangedFiles() ([]string, error) {
+	prNumber, err := strconv.Atoi(c.PR)
+	if err != nil {
+		return nil, err
+	}
+
+	var files []string
+	opts := &github.ListOptions{PerPage: 100}
+	for {
+		prFiles, resp, err := c.PullRequests.ListFiles(c.Ctx, owner, c.Repo, prNumber, opts)
+		if err != nil {
+			return nil, err
+		}
+		for _, f := range prFiles {
+			files = append(files, f.GetFilename())
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
+	}
+	return files, nil
+}
+
+func (c *Client) GetAllChecks() ([]*github.CheckRun, error) {
+	var runs []*github.CheckRun
+	opts := &github.ListCheckRunsOptions{ListOptions: github.ListOptions{PerPage: 100}}
+	for {
+		checks, resp, err := c.Checks.ListCheckRunsForRef(c.Ctx, owner, c.Repo, c.Sha, opts)
+		if err != nil {
+			return nil, err
+		}
+		runs = append(runs, checks.CheckRuns...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
+	}
+	return runs, nil
+}
+
 func (c *Client) AddCheck(pending bool, msg string) error {
 	status := "in_progress"
 	summary := "🚧 PR currently blocked from merging\n\n" + imageHTML
