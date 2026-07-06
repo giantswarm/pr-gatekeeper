@@ -11,3 +11,7 @@ CVE-2026-46597 until=2026-07-29 # golang.org/x/crypto@v0.51.0
 CVE-2026-46598 until=2026-07-29 # golang.org/x/crypto@v0.51.0
 CVE-2026-39827 until=2026-07-29 # golang.org/x/crypto@v0.51.0
 CVE-2026-39828 until=2026-07-29 # golang.org/x/crypto@v0.51.0
+CVE-2026-48978 until=2026-08-02 # oras.land/oras-go/v2@v2.6.0
+CVE-2026-50151 until=2026-08-02 # oras.land/oras-go/v2@v2.6.0
+CVE-2026-50162 until=2026-08-02 # oras.land/oras-go/v2@v2.6.0
+CVE-2026-50163 until=2026-08-02 # oras.land/oras-go/v2@v2.6.0
