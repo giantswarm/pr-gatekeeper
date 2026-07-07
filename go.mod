@@ -4,7 +4,7 @@ go 1.26.3
 
 require (
 	github.com/giantswarm/apptest-framework/v5 v5.2.1
-	github.com/google/go-github/v88 v88.0.0
+	github.com/google/go-github/v89 v89.0.0
 	golang.org/x/oauth2 v0.36.0
 	k8s.io/apimachinery v0.36.2
 )
