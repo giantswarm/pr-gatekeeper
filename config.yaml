@@ -1,6 +1,7 @@
 knownTriggers:
   "E2E Test Suites": "/run cluster-test-suites"
   "Release Test Suites": "/run releases-test-suites"
+  "E2E Coverage": "/run releases-test-suites"
 
 repos:
   cluster-test-suites:
@@ -60,3 +61,7 @@ repos:
   releases:
     requiredChecks:
       - "Release Test Suites"
+      # Requires the full set of test suites for every new release in the PR, not just the
+      # ones the current release stage happens to run. Published by the `E2E Coverage`
+      # workflow in giantswarm/releases.
+      - "E2E Coverage"
