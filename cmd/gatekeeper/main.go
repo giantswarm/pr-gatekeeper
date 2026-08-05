@@ -159,7 +159,7 @@ func main() {
 	// Check labels on the PR for overriding behaviour
 	hasDeprecatedSkipLabel := false
 	for _, label := range pullRequest.Labels {
-		switch strings.ToLower(*label.Name) {
+		switch strings.ToLower(label.Name) {
 		case skipLabel:
 			fmt.Println("The use of the skip/ci label is deprecated, please use the /skip-ci comment trigger instead")
 			result.AddMessage(fmt.Sprintf("ℹ️ Please note: The `%s` label no longer controls skipping the CI checks and is now purely informational. Please use the `/skip-ci [reason]` comment trigger with a required reason message.", skipLabel))
