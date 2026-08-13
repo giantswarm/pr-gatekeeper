@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* Require `App E2E Test Suites` for every provider a full `/run app-test-suites` covers, taking the union of the providers declared in `./tests/e2e/config.yaml` and in the per-suite configs under `./tests/e2e/suites`, and defaulting to `capa` for configs that declare none. Previously only the providers named in the top level config were required, so a provider declared solely by a test suite could be missing entirely and the PR would still be mergeable.
+* Show the `/run app-test-suites-single PROVIDER=<provider>` trigger hint for the per-provider `App E2E Test Suites` checks by matching known triggers against dynamic check names by prefix.
 * Require the `E2E Coverage` check on `releases` PRs, so a release is only mergeable once every expected test suite has passed and not just the ones the current release stage runs.
 * Require a successful `Generate MC` (MC creation test) for at least one provider updated in a `releases` PR before it can be merged.
 * Added the commit hash to the details to make it clearer its not related to the PR as a whole

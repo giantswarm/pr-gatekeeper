@@ -1,0 +1,10 @@
+knownTriggers:
+  "E2E Test Suites": "/run cluster-test-suites"
+  "App E2E Test Suites": "/run app-test-suites-single PROVIDER={{suffix}}"
+  "Nested": "/run short SUFFIX={{suffix}}"
+  "Nested - Check": "/run long SUFFIX={{suffix}}"
+
+repos:
+  some-repo:
+    requiredChecks:
+      - "E2E Test Suites"

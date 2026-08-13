@@ -2,6 +2,10 @@ knownTriggers:
   "E2E Test Suites": "/run cluster-test-suites"
   "Release Test Suites": "/run releases-test-suites"
   "E2E Coverage": "/run releases-test-suites"
+  # The per-provider "App E2E Test Suites - <provider>" checks are added
+  # dynamically for repos with a ./tests/e2e/config.yaml, so this name is
+  # matched by prefix and the provider is substituted into `{{suffix}}`.
+  "App E2E Test Suites": "/run app-test-suites-single PROVIDER={{suffix}}"
 
 repos:
   cluster-test-suites:

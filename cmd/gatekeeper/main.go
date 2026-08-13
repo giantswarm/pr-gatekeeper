@@ -16,12 +16,19 @@ import (
 )
 
 const (
-	skipLabel          = "skip/ci"
-	doNotMergeHold     = "do-not-merge/hold"
-	e2eTestConfigFile  = "./tests/e2e/config.yaml"
+	skipLabel         = "skip/ci"
+	doNotMergeHold    = "do-not-merge/hold"
+	e2eTestConfigFile = "./tests/e2e/config.yaml"
+	// e2eTestSuitesDir holds one directory per test suite, each of which may
+	// carry its own apptest config declaring extra providers.
+	e2eTestSuitesDir   = "tests/e2e/suites"
 	appTestCheckPrefix = "App E2E Test Suites"
-	generateMCPrefix   = "Generate MC - "
-	releasesRepo       = "releases"
+	// defaultAppTestProvider matches the `DEFAULT_PROVIDER` default of the
+	// app-test-suites pipeline, used for any apptest config that declares no
+	// providers of its own.
+	defaultAppTestProvider = "capa"
+	generateMCPrefix       = "Generate MC - "
+	releasesRepo           = "releases"
 )
 
 // releaseProviderDirs maps top-level directories in the giantswarm/releases
@@ -52,7 +59,7 @@ var (
 	pr   string
 )
 
-func init() {
+func main() {
 	repo = os.Getenv("REPO")
 	pr = os.Getenv("PR")
 
@@ -60,9 +67,7 @@ func init() {
 		fmt.Println("Both `REPO` and `PR` environment variables must be set")
 		os.Exit(1)
 	}
-}
 
-func main() {
 	gh := github.New(repo, pr)
 	pullRequest, err := gh.GetPR()
 	if err != nil {
@@ -86,6 +91,7 @@ func main() {
 	}
 
 	// Check if config file is present in the github repo. If present automatically add the E2E Test Suites check
+	appTestProviders := []string{}
 	configFile, ok, err := gh.GetFile(e2eTestConfigFile)
 	if err != nil {
 		fmt.Println("Failed to check repo for config file")
@@ -96,15 +102,20 @@ func main() {
 			repoConfig = &config.Repo{RequiredChecks: []string{}}
 		}
 
-		apptestConfig := &apptest.TestConfig{}
-		err = yaml.Unmarshal([]byte(configFile), apptestConfig)
+		appTestConfigs, err := getAppTestConfigs(&gh, configFile)
+		if err != nil {
+			fmt.Println("Failed to load app test config files")
+			panic(err)
+		}
+
+		appTestProviders, err = getAppTestProviders(appTestConfigs)
 		if err != nil {
 			fmt.Println("Failed to parse app test config file")
 			panic(err)
 		}
 
-		for _, provider := range apptestConfig.Providers {
-			checkName := fmt.Sprintf("%s - %s", appTestCheckPrefix, strings.ToLower(provider))
+		for _, provider := range appTestProviders {
+			checkName := fmt.Sprintf("%s - %s", appTestCheckPrefix, provider)
 			if !slices.Contains(repoConfig.RequiredChecks, checkName) {
 				fmt.Printf("Adding the '%s' required check\n", checkName)
 				repoConfig.RequiredChecks = append(repoConfig.RequiredChecks, checkName)
@@ -117,6 +128,14 @@ func main() {
 		result.AddMessage("No repo config found, skipping checks")
 	} else {
 		result.AddMessage(fmt.Sprintf("## Details for commit: `%s`\n", *pullRequest.Head.SHA))
+
+		if len(appTestProviders) > 0 {
+			result.AddMessage(fmt.Sprintf("ℹ️ App E2E tests are required for every provider configured in `%s` and in the per-suite configs under `%s`: `%s`\n",
+				e2eTestConfigFile,
+				e2eTestSuitesDir,
+				strings.Join(appTestProviders, "`, `"),
+			))
+		}
 
 		for _, check := range repoConfig.RequiredChecks {
 			checkRun, err := gh.GetCheck(check)
@@ -251,6 +270,64 @@ func main() {
 		fmt.Println("Failed to add check run")
 		panic(err)
 	}
+}
+
+// getAppTestConfigs returns the contents of every apptest config that applies to
+// the repo: the top level config (already fetched, passed in as rootConfig)
+// plus any per-suite config under e2eTestSuitesDir.
+func getAppTestConfigs(gh *github.Client, rootConfig string) ([]string, error) {
+	configs := []string{rootConfig}
+
+	suiteConfigFiles, err := gh.FindFiles(e2eTestSuitesDir, "config.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, suiteConfigFile := range suiteConfigFiles {
+		contents, ok, err := gh.GetFile(suiteConfigFile)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			configs = append(configs, contents)
+		}
+	}
+
+	return configs, nil
+}
+
+// getAppTestProviders returns the full set of providers a `/run app-test-suites`
+// covers for the repo: the union of the providers declared across all its
+// apptest configs, with configs declaring none falling back to the default
+// provider. This mirrors the `gather-facts` task of the app-test-suites pipeline
+// (see giantswarm/tekton-resources), so that every provider a full run would
+// produce a check for is required - not just the ones the top level config
+// happens to name, or the ones a targeted single-provider run covered.
+func getAppTestProviders(configs []string) ([]string, error) {
+	providers := []string{}
+
+	for _, contents := range configs {
+		apptestConfig := &apptest.TestConfig{}
+		err := yaml.Unmarshal([]byte(contents), apptestConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		declared := apptestConfig.Providers
+		if len(declared) == 0 {
+			declared = []string{defaultAppTestProvider}
+		}
+
+		for _, provider := range declared {
+			provider = strings.ToLower(strings.TrimSpace(provider))
+			if provider != "" && !slices.Contains(providers, provider) {
+				providers = append(providers, provider)
+			}
+		}
+	}
+	slices.Sort(providers)
+
+	return providers, nil
 }
 
 // checkReleaseMCTests requires that an MC creation test ("Generate MC - <provider> /
