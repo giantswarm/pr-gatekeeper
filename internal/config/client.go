@@ -2,8 +2,18 @@ package config
 
 import (
 	"os"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/util/yaml"
+)
+
+const (
+	// checkNameSeparator separates the static part of a check name from its
+	// dynamic suffix, e.g. "App E2E Test Suites - capa".
+	checkNameSeparator = " - "
+	// suffixPlaceholder is replaced in a known trigger with the dynamic suffix
+	// of the check name it was matched against by prefix.
+	suffixPlaceholder = "{{suffix}}"
 )
 
 type Conf struct {
@@ -51,6 +61,14 @@ func GetRepoConfig(repo string) (*Repo, error) {
 	return nil, nil
 }
 
+// GetKnownTrigger returns the PR comment trigger for the given check run name,
+// or an empty string if none is configured.
+//
+// Check names are matched exactly first. Checks with a dynamic suffix (e.g. the
+// per-provider "App E2E Test Suites - capa" checks added from a repo's apptest
+// config) are then matched against the longest configured name that is a prefix
+// of them, with the suffix substituted into any `{{suffix}}` placeholder in the
+// trigger.
 func GetKnownTrigger(check string) string {
 	conf, err := LoadConfig()
 	if err != nil {
@@ -62,5 +80,17 @@ func GetKnownTrigger(check string) string {
 		return trigger
 	}
 
-	return ""
+	prefix := ""
+	for name := range conf.KnownTriggers {
+		if strings.HasPrefix(check, name+checkNameSeparator) && len(name) > len(prefix) {
+			prefix = name
+		}
+	}
+	if prefix == "" {
+		return ""
+	}
+
+	suffix := strings.TrimPrefix(check, prefix+checkNameSeparator)
+
+	return strings.ReplaceAll(conf.KnownTriggers[prefix], suffixPlaceholder, suffix)
 }

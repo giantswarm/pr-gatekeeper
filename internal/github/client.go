@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -192,6 +193,38 @@ func (c *Client) GetFile(filepath string) (string, bool, error) {
 	}
 
 	return body, true, nil
+}
+
+// FindFiles returns the paths of all files named name that live at any depth
+// below dir at the PR head commit, sorted. Returns no paths if dir holds no
+// such file or doesn't exist.
+func (c *Client) FindFiles(dir, name string) ([]string, error) {
+	tree, resp, err := c.Git.GetTree(c.Ctx, owner, c.Repo, c.Sha, true)
+	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if tree.GetTruncated() {
+		fmt.Printf("The git tree for `%s` was truncated, some '%s' files may have been missed\n", c.Repo, name)
+	}
+
+	dir = strings.TrimSuffix(dir, "/") + "/"
+
+	var paths []string
+	for _, entry := range tree.Entries {
+		path := entry.GetPath()
+		if entry.GetType() != "blob" {
+			continue
+		}
+		if strings.HasPrefix(path, dir) && strings.HasSuffix(path, "/"+name) {
+			paths = append(paths, path)
+		}
+	}
+	slices.Sort(paths)
+
+	return paths, nil
 }
 
 func (c *Client) AddSkippingComment(reason, user string) error {
