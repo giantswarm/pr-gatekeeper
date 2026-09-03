@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v90/github"
+	"github.com/google/go-github/v91/github"
 	"golang.org/x/oauth2"
 )
 
@@ -281,7 +281,7 @@ func (c *Client) AddSkippingComment(reason, user string) error {
 		}
 	}
 
-	_, _, err = c.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, &github.IssueComment{Body: &commentMessage})
+	_, _, err = c.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, github.IssueCommentRequest{Body: commentMessage})
 	return err
 }
 
@@ -314,7 +314,7 @@ func (c *Client) AddReasonRequiredComment() error {
 		}
 	}
 
-	_, _, err = c.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, &github.IssueComment{Body: &commentMessage})
+	_, _, err = c.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, github.IssueCommentRequest{Body: commentMessage})
 	return err
 }
 
@@ -347,7 +347,7 @@ func (c *Client) AddSkipLabelDeprecatedComment() error {
 		}
 	}
 
-	_, _, err = c.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, &github.IssueComment{Body: &commentMessage})
+	_, _, err = c.Issues.CreateComment(c.Ctx, owner, c.Repo, prNumber, github.IssueCommentRequest{Body: commentMessage})
 	return err
 }
 
