@@ -21,6 +21,9 @@ repos:
   cluster-azure:
     requiredChecks:
       - "E2E Test Suites"
+  cluster-aks:
+    requiredChecks:
+      - "E2E Test Suites"
   cluster-gcp:
     requiredChecks:
       - "E2E Test Suites"
