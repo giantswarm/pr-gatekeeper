@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	apptest "github.com/giantswarm/apptest-framework/v5/pkg/config"
-	gogithub "github.com/google/go-github/v92/github"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/giantswarm/pr-gatekeeper/internal/config"
@@ -97,24 +96,28 @@ func main() {
 		panic(err)
 	}
 
-	onlyIgnored := false
-	if len(ignoredPaths) > 0 {
-		changedFiles, err := gh.GetChangedFiles()
+	var changedFiles []string
+	if len(ignoredPaths) > 0 || repo == releasesRepo {
+		changedFiles, err = gh.GetChangedFiles()
 		if err != nil {
-			// Fall back to running all the checks
-			fmt.Println("Failed to list changed files, unable to check for ignored paths")
-		} else {
-			onlyIgnored = config.OnlyIgnoredFiles(changedFiles, ignoredPaths)
+			fmt.Println("Failed to list changed files")
+			// The releases checks can't run without the changed files, other
+			// repos fall back to running all the checks
+			if repo == releasesRepo {
+				panic(err)
+			}
 		}
 	}
+	onlyIgnored := config.OnlyIgnoredFiles(changedFiles, ignoredPaths)
+
+	result.AddMessage(fmt.Sprintf("## Details for commit: `%s`\n", *pullRequest.Head.SHA))
 
 	if onlyIgnored {
-		result.AddMessage(fmt.Sprintf("## Details for commit: `%s`\n", *pullRequest.Head.SHA))
 		result.AddMessage(fmt.Sprintf("ℹ️ Only files matching the ignored paths were changed (`%s`) - **skipping required checks**\n",
 			strings.Join(ignoredPaths, "`, `"),
 		))
 	} else {
-		checkRequirements(&gh, result, repoConfig, pullRequest)
+		checkRequirements(&gh, result, repoConfig, changedFiles)
 	}
 
 	// Check labels on the PR for overriding behaviour
@@ -216,7 +219,7 @@ func main() {
 
 // checkRequirements verifies the repo's required checks (including those added
 // from its apptest configs) and, for the releases repo, the MC creation tests.
-func checkRequirements(gh *github.Client, result *results.Result, repoConfig *config.Repo, pullRequest *gogithub.PullRequest) {
+func checkRequirements(gh *github.Client, result *results.Result, repoConfig *config.Repo, changedFiles []string) {
 	// Check if config file is present in the github repo. If present automatically add the E2E Test Suites check
 	appTestProviders := []string{}
 	configFile, ok, err := gh.GetFile(e2eTestConfigFile)
@@ -254,8 +257,6 @@ func checkRequirements(gh *github.Client, result *results.Result, repoConfig *co
 		fmt.Println("No repo config found, skipping checks")
 		result.AddMessage("No repo config found, skipping checks")
 	} else {
-		result.AddMessage(fmt.Sprintf("## Details for commit: `%s`\n", *pullRequest.Head.SHA))
-
 		if len(appTestProviders) > 0 {
 			result.AddMessage(fmt.Sprintf("ℹ️ App E2E tests are required for every provider configured in `%s` and in the per-suite configs under `%s`: `%s`\n",
 				e2eTestConfigFile,
@@ -299,7 +300,7 @@ func checkRequirements(gh *github.Client, result *results.Result, repoConfig *co
 	// provider is enough; the test pass/fail result does not block merging
 	// (only MC creation failures do, via the "Generate MC" check conclusion).
 	if repo == releasesRepo {
-		checkReleaseMCTests(gh, result)
+		checkReleaseMCTests(gh, result, changedFiles)
 	}
 }
 
@@ -365,13 +366,7 @@ func getAppTestProviders(configs []string) ([]string, error) {
 // <installation>") has completed successfully for at least one provider updated
 // in the releases PR. Providers without a dedicated test MC (e.g. EKS) are
 // ignored. If the PR updates no MC-testable provider, the gate is skipped.
-func checkReleaseMCTests(gh *github.Client, result *results.Result) {
-	changedFiles, err := gh.GetChangedFiles()
-	if err != nil {
-		fmt.Println("Failed to list changed files for releases PR")
-		panic(err)
-	}
-
+func checkReleaseMCTests(gh *github.Client, result *results.Result, changedFiles []string) {
 	affected := map[string]bool{}
 	providers := []string{}
 	for _, file := range changedFiles {

@@ -120,9 +120,15 @@ func TestOnlyIgnoredFiles(t *testing.T) {
 			expected: true,
 		},
 		{
-			name:     "pattern without a slash matches the file name at any depth",
+			name:     "pattern without a slash only matches at the root",
 			files:    []string{"helm/chart/README.md"},
 			patterns: patterns,
+			expected: false,
+		},
+		{
+			name:     "leading ./ in a pattern is ignored",
+			files:    []string{"docs/a/b.md", "notes.txt"},
+			patterns: []string{"./docs/**", "./notes.txt"},
 			expected: true,
 		},
 		{

@@ -117,9 +117,10 @@ func GetIgnoredPaths(repo string) ([]string, error) {
 // OnlyIgnoredFiles returns true if there is at least one file and every file
 // matches at least one of the patterns.
 //
-// Patterns ending in `/**` match everything below that directory. Patterns
-// without a `/` match the file name at any depth (e.g. `README.md`). Any other
-// pattern is matched against the full path using path.Match.
+// Patterns are relative to the repo root, a leading `./` is ignored. Patterns
+// ending in `/**` match everything below that directory, any other pattern is
+// matched against the full path using path.Match (so `README.md` only matches
+// the root README and `*` doesn't cross directories).
 func OnlyIgnoredFiles(files, patterns []string) bool {
 	if len(files) == 0 || len(patterns) == 0 {
 		return false
@@ -144,15 +145,12 @@ func matchesAny(file string, patterns []string) bool {
 }
 
 func matchPath(pattern, file string) bool {
+	pattern = strings.TrimPrefix(pattern, "./")
+
 	if dir, ok := strings.CutSuffix(pattern, "/**"); ok {
 		return strings.HasPrefix(file, dir+"/")
 	}
 
-	name := file
-	if !strings.Contains(pattern, "/") {
-		name = path.Base(file)
-	}
-
-	matched, err := path.Match(pattern, name)
+	matched, err := path.Match(pattern, file)
 	return err == nil && matched
 }
