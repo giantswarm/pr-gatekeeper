@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	apptest "github.com/giantswarm/apptest-framework/v5/pkg/config"
+	gogithub "github.com/google/go-github/v92/github"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/giantswarm/pr-gatekeeper/internal/config"
@@ -90,89 +91,30 @@ func main() {
 		panic(err)
 	}
 
-	// Check if config file is present in the github repo. If present automatically add the E2E Test Suites check
-	appTestProviders := []string{}
-	configFile, ok, err := gh.GetFile(e2eTestConfigFile)
+	ignoredPaths, err := config.GetIgnoredPaths(repo)
 	if err != nil {
-		fmt.Println("Failed to check repo for config file")
+		fmt.Println("Failed to load ignored paths")
 		panic(err)
 	}
-	if ok {
-		if repoConfig == nil {
-			repoConfig = &config.Repo{RequiredChecks: []string{}}
-		}
 
-		appTestConfigs, err := getAppTestConfigs(&gh, configFile)
+	onlyIgnored := false
+	if len(ignoredPaths) > 0 {
+		changedFiles, err := gh.GetChangedFiles()
 		if err != nil {
-			fmt.Println("Failed to load app test config files")
-			panic(err)
-		}
-
-		appTestProviders, err = getAppTestProviders(appTestConfigs)
-		if err != nil {
-			fmt.Println("Failed to parse app test config file")
-			panic(err)
-		}
-
-		for _, provider := range appTestProviders {
-			checkName := fmt.Sprintf("%s - %s", appTestCheckPrefix, provider)
-			if !slices.Contains(repoConfig.RequiredChecks, checkName) {
-				fmt.Printf("Adding the '%s' required check\n", checkName)
-				repoConfig.RequiredChecks = append(repoConfig.RequiredChecks, checkName)
-			}
+			// Fall back to running all the checks
+			fmt.Println("Failed to list changed files, unable to check for ignored paths")
+		} else {
+			onlyIgnored = config.OnlyIgnoredFiles(changedFiles, ignoredPaths)
 		}
 	}
 
-	if repoConfig == nil {
-		fmt.Println("No repo config found, skipping checks")
-		result.AddMessage("No repo config found, skipping checks")
-	} else {
+	if onlyIgnored {
 		result.AddMessage(fmt.Sprintf("## Details for commit: `%s`\n", *pullRequest.Head.SHA))
-
-		if len(appTestProviders) > 0 {
-			result.AddMessage(fmt.Sprintf("ℹ️ App E2E tests are required for every provider configured in `%s` and in the per-suite configs under `%s`: `%s`\n",
-				e2eTestConfigFile,
-				e2eTestSuitesDir,
-				strings.Join(appTestProviders, "`, `"),
-			))
-		}
-
-		for _, check := range repoConfig.RequiredChecks {
-			checkRun, err := gh.GetCheck(check)
-			switch {
-			case err != nil || checkRun == nil:
-				result.ChecksPassing = false
-				trigger := config.GetKnownTrigger(check)
-				if trigger != "" {
-					trigger = fmt.Sprintf(" - you can trigger it by commenting on the PR with `%s`", trigger)
-				}
-				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but wasn't found%s\n", check, trigger))
-
-			case checkRun.Conclusion == nil:
-				result.ChecksPassing = false
-				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but is still in progress\n", check))
-
-			case *checkRun.Conclusion == "success":
-				result.AddMessage(fmt.Sprintf("✅ Check Run `%s` is required and has completed successfully\n", check))
-
-			default:
-				result.ChecksPassing = false
-				trigger := config.GetKnownTrigger(check)
-				if trigger != "" {
-					trigger = fmt.Sprintf(" - you can re-trigger it by commenting on the PR with `%s`", trigger)
-				}
-				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but didn't completed successfully%s\n", check, trigger))
-			}
-		}
-	}
-
-	// For the releases repo, require that an MC creation test has run for at
-	// least one provider updated in this PR. This catches releases that break
-	// MC creation before they are merged. Running it for any one affected
-	// provider is enough; the test pass/fail result does not block merging
-	// (only MC creation failures do, via the "Generate MC" check conclusion).
-	if repo == releasesRepo {
-		checkReleaseMCTests(&gh, result)
+		result.AddMessage(fmt.Sprintf("ℹ️ Only files matching the ignored paths were changed (`%s`) - **skipping required checks**\n",
+			strings.Join(ignoredPaths, "`, `"),
+		))
+	} else {
+		checkRequirements(&gh, result, repoConfig, pullRequest)
 	}
 
 	// Check labels on the PR for overriding behaviour
@@ -269,6 +211,95 @@ func main() {
 	if err != nil {
 		fmt.Println("Failed to add check run")
 		panic(err)
+	}
+}
+
+// checkRequirements verifies the repo's required checks (including those added
+// from its apptest configs) and, for the releases repo, the MC creation tests.
+func checkRequirements(gh *github.Client, result *results.Result, repoConfig *config.Repo, pullRequest *gogithub.PullRequest) {
+	// Check if config file is present in the github repo. If present automatically add the E2E Test Suites check
+	appTestProviders := []string{}
+	configFile, ok, err := gh.GetFile(e2eTestConfigFile)
+	if err != nil {
+		fmt.Println("Failed to check repo for config file")
+		panic(err)
+	}
+	if ok {
+		if repoConfig == nil {
+			repoConfig = &config.Repo{RequiredChecks: []string{}}
+		}
+
+		appTestConfigs, err := getAppTestConfigs(gh, configFile)
+		if err != nil {
+			fmt.Println("Failed to load app test config files")
+			panic(err)
+		}
+
+		appTestProviders, err = getAppTestProviders(appTestConfigs)
+		if err != nil {
+			fmt.Println("Failed to parse app test config file")
+			panic(err)
+		}
+
+		for _, provider := range appTestProviders {
+			checkName := fmt.Sprintf("%s - %s", appTestCheckPrefix, provider)
+			if !slices.Contains(repoConfig.RequiredChecks, checkName) {
+				fmt.Printf("Adding the '%s' required check\n", checkName)
+				repoConfig.RequiredChecks = append(repoConfig.RequiredChecks, checkName)
+			}
+		}
+	}
+
+	if repoConfig == nil {
+		fmt.Println("No repo config found, skipping checks")
+		result.AddMessage("No repo config found, skipping checks")
+	} else {
+		result.AddMessage(fmt.Sprintf("## Details for commit: `%s`\n", *pullRequest.Head.SHA))
+
+		if len(appTestProviders) > 0 {
+			result.AddMessage(fmt.Sprintf("ℹ️ App E2E tests are required for every provider configured in `%s` and in the per-suite configs under `%s`: `%s`\n",
+				e2eTestConfigFile,
+				e2eTestSuitesDir,
+				strings.Join(appTestProviders, "`, `"),
+			))
+		}
+
+		for _, check := range repoConfig.RequiredChecks {
+			checkRun, err := gh.GetCheck(check)
+			switch {
+			case err != nil || checkRun == nil:
+				result.ChecksPassing = false
+				trigger := config.GetKnownTrigger(check)
+				if trigger != "" {
+					trigger = fmt.Sprintf(" - you can trigger it by commenting on the PR with `%s`", trigger)
+				}
+				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but wasn't found%s\n", check, trigger))
+
+			case checkRun.Conclusion == nil:
+				result.ChecksPassing = false
+				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but is still in progress\n", check))
+
+			case *checkRun.Conclusion == "success":
+				result.AddMessage(fmt.Sprintf("✅ Check Run `%s` is required and has completed successfully\n", check))
+
+			default:
+				result.ChecksPassing = false
+				trigger := config.GetKnownTrigger(check)
+				if trigger != "" {
+					trigger = fmt.Sprintf(" - you can re-trigger it by commenting on the PR with `%s`", trigger)
+				}
+				result.AddMessage(fmt.Sprintf("⚠️ Check Run `%s` is required but didn't completed successfully%s\n", check, trigger))
+			}
+		}
+	}
+
+	// For the releases repo, require that an MC creation test has run for at
+	// least one provider updated in this PR. This catches releases that break
+	// MC creation before they are merged. Running it for any one affected
+	// provider is enough; the test pass/fail result does not block merging
+	// (only MC creation failures do, via the "Generate MC" check conclusion).
+	if repo == releasesRepo {
+		checkReleaseMCTests(gh, result)
 	}
 }
 

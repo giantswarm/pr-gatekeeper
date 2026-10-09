@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -18,6 +19,7 @@ const (
 
 type Conf struct {
 	KnownTriggers KnownTriggers `json:"knownTriggers"`
+	IgnoredPaths  []string      `json:"ignoredPaths"`
 	Repos         Repos         `json:"repos"`
 }
 
@@ -26,6 +28,8 @@ type Repos map[string]Repo
 
 type Repo struct {
 	RequiredChecks []string `json:"requiredChecks"`
+	// IgnoredPaths overrides the global IgnoredPaths for this repo when set.
+	IgnoredPaths []string `json:"ignoredPaths"`
 }
 
 func LoadConfig() (*Conf, error) {
@@ -93,4 +97,62 @@ func GetKnownTrigger(check string) string {
 	suffix := strings.TrimPrefix(check, prefix+checkNameSeparator)
 
 	return strings.ReplaceAll(conf.KnownTriggers[prefix], suffixPlaceholder, suffix)
+}
+
+// GetIgnoredPaths returns the path patterns that don't require any checks for
+// the given repo: the repo's own IgnoredPaths if set, otherwise the global ones.
+func GetIgnoredPaths(repo string) ([]string, error) {
+	conf, err := LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	if repoConf, ok := conf.Repos[repo]; ok && repoConf.IgnoredPaths != nil {
+		return repoConf.IgnoredPaths, nil
+	}
+
+	return conf.IgnoredPaths, nil
+}
+
+// OnlyIgnoredFiles returns true if there is at least one file and every file
+// matches at least one of the patterns.
+//
+// Patterns ending in `/**` match everything below that directory. Patterns
+// without a `/` match the file name at any depth (e.g. `README.md`). Any other
+// pattern is matched against the full path using path.Match.
+func OnlyIgnoredFiles(files, patterns []string) bool {
+	if len(files) == 0 || len(patterns) == 0 {
+		return false
+	}
+
+	for _, file := range files {
+		if !matchesAny(file, patterns) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func matchesAny(file string, patterns []string) bool {
+	for _, pattern := range patterns {
+		if matchPath(pattern, file) {
+			return true
+		}
+	}
+	return false
+}
+
+func matchPath(pattern, file string) bool {
+	if dir, ok := strings.CutSuffix(pattern, "/**"); ok {
+		return strings.HasPrefix(file, dir+"/")
+	}
+
+	name := file
+	if !strings.Contains(pattern, "/") {
+		name = path.Base(file)
+	}
+
+	matched, err := path.Match(pattern, name)
+	return err == nil && matched
 }

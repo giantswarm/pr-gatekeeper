@@ -7,6 +7,13 @@ knownTriggers:
   # matched by prefix and the provider is substituted into `{{suffix}}`.
   "App E2E Test Suites": "/run app-test-suites-single PROVIDER={{suffix}}"
 
+# PRs that only change files matching these patterns don't require any checks.
+# A repo can override this list with its own `ignoredPaths`.
+ignoredPaths:
+  - ".github/**"
+  - "README.md"
+  - "CHANGELOG.md"
+
 repos:
   cluster-test-suites:
     requiredChecks:

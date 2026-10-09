@@ -97,6 +97,10 @@ func (c *Client) GetChangedFiles() ([]string, error) {
 		}
 		for _, f := range prFiles {
 			files = append(files, f.GetFilename())
+			// Renamed files also touch their old path
+			if f.GetPreviousFilename() != "" {
+				files = append(files, f.GetPreviousFilename())
+			}
 		}
 		if resp.NextPage == 0 {
 			break
