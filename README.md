@@ -23,9 +23,9 @@ A PR check run that ensures requirements are met before allowing PRs to be merge
 
 ## Releasing a new version
 
-Currently this application doesn't make use of tagged releases and instead builds a new `latest` container image from the `main` branch.
+This application uses tagged releases following the standard Giant Swarm release process. To release, create a branch named `main#release#<major|minor|patch>` (or `main#release#v<x.y.z>`) and push it, which opens a release PR. Merging that PR tags the release, and CircleCI pushes a container image tagged with the release version (e.g. `gsoci.azurecr.io/giantswarm/pr-gatekeeper:0.1.0`).
 
-This may change once automated updating of the image reference in the Tekton task can be handled but until then whatever is merged into `main` should match what is deployed.
+The `latest` image tag is no longer used. To deploy a new release, update the image reference in the Tekton task to the released version.
 
 ## Adding Heimdall as a required PR check
 
