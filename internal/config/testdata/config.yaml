@@ -4,7 +4,16 @@ knownTriggers:
   "Nested": "/run short SUFFIX={{suffix}}"
   "Nested - Check": "/run long SUFFIX={{suffix}}"
 
+ignoredPaths:
+  - ".github/**"
+  - "README.md"
+
 repos:
   some-repo:
     requiredChecks:
       - "E2E Test Suites"
+  override-repo:
+    ignoredPaths:
+      - "docs/**"
+  opt-out-repo:
+    ignoredPaths: []
