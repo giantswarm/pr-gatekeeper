@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/giantswarm/pr-gatekeeper/tree/master
+## [0.1.0] - 2026-10-12
 
+[Unreleased]: https://github.com/giantswarm/pr-gatekeeper/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/giantswarm/pr-gatekeeper/releases/tag/v0.1.0
 ### Fixed
 
 * Correctly check for the require App Test checks for each provider when ./tests/e2e/config.yaml present in repo.
