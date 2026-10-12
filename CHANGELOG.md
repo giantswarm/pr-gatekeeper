@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+* Build container images for every branch except `main`, and publish releases only from tags.
+
 ## [0.1.0] - 2026-10-12
 
 ### Added
