@@ -1,5 +1,5 @@
-github.com/giantswarm/apptest-framework/v5 v5.3.3 h1:Zwe7EL6tQoFt3RY4edq5LvbeDE4HTNSzjEI8nblJg8Y=
-github.com/giantswarm/apptest-framework/v5 v5.3.3/go.mod h1:BvIPTQf/Jx4jwHNEjLVUcAEl/Jxn9RcI3bAMMjJYK1Y=
+github.com/giantswarm/apptest-framework/v5 v5.4.0 h1:SSFqHkZMv96CV8g+XxrrZfJNtZRfBGlvh3qR+hd3jPo=
+github.com/giantswarm/apptest-framework/v5 v5.4.0/go.mod h1:ORqYpLj8fE955SRXtFF4+2AmkC1SorDBQlZxau1/VPM=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
