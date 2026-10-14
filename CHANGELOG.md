@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * Build container images for every branch except `main`, and publish releases only from tags.
+* Ignore repo tooling and metadata files (Makefiles, Renovate config, linters, docs, etc.) by default.
 
 ## [0.1.0] - 2026-10-12
 
