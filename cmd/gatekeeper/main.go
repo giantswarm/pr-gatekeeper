@@ -109,10 +109,15 @@ func main() {
 		}
 	}
 	onlyIgnored := config.OnlyIgnoredFiles(changedFiles, ignoredPaths)
+	isRelease := config.IsReleaseBranch(pullRequest.GetHead().GetRef())
 
 	result.AddMessage(fmt.Sprintf("## Details for commit: `%s`\n", *pullRequest.Head.SHA))
 
-	if onlyIgnored {
+	if onlyIgnored && isRelease {
+		result.AddMessage("ℹ️ Only files matching the ignored paths were changed, but this is a release PR - **running required checks**\n")
+	}
+
+	if onlyIgnored && !isRelease {
 		result.AddMessage(fmt.Sprintf("ℹ️ Only files matching the ignored paths were changed (`%s`) - **skipping required checks**\n",
 			strings.Join(ignoredPaths, "`, `"),
 		))

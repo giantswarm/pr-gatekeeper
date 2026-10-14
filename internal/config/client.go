@@ -135,6 +135,18 @@ func OnlyIgnoredFiles(files, patterns []string) bool {
 	return true
 }
 
+// IsReleaseBranch returns true if the branch was created to open a release PR,
+// e.g. `main#release#patch` or `release-v1.2.x#release#v1.2.3`. Release PRs
+// always require their checks, even if they only change ignored paths.
+func IsReleaseBranch(ref string) bool {
+	for _, part := range strings.Split(ref, "#") {
+		if part == "release" {
+			return true
+		}
+	}
+	return false
+}
+
 func matchesAny(file string, patterns []string) bool {
 	for _, pattern := range patterns {
 		if matchPath(pattern, file) {

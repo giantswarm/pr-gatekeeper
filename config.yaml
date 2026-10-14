@@ -11,8 +11,25 @@ knownTriggers:
 # A repo can override this list with its own `ignoredPaths`.
 ignoredPaths:
   - ".github/**"
+  - ".cursor/**"
+  - ".claude/**"
+  - "docs/**"
   - "README.md"
   - "CHANGELOG.md"
+  - "CLAUDE.md"
+  - "CONTRIBUTING.md"
+  - "SECURITY.md"
+  - "CODEOWNERS"
+  - "LICENSE"
+  - "DCO"
+  - "Makefile"
+  - "Makefile.*.mk"
+  - "renovate.json5"
+  - ".gitignore"
+  - ".nancy-ignore"
+  - ".nancy-ignore.generated"
+  - ".pre-commit-config.yaml"
+  - ".yamllint.yaml"
 
 repos:
   cluster-test-suites:

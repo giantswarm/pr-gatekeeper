@@ -183,3 +183,28 @@ func TestOnlyIgnoredFiles(t *testing.T) {
 		})
 	}
 }
+
+func TestIsReleaseBranch(t *testing.T) {
+	testCases := []struct {
+		ref      string
+		expected bool
+	}{
+		{ref: "main#release#patch", expected: true},
+		{ref: "master#release#minor", expected: true},
+		{ref: "main#release#v1.2.3", expected: true},
+		{ref: "release-v10.4.x#release#v10.4.1", expected: true},
+		{ref: "release#patch", expected: true},
+		{ref: "release-notes", expected: false},
+		{ref: "feature/release", expected: false},
+		{ref: "main#releases#patch", expected: false},
+		{ref: "", expected: false},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.ref, func(t *testing.T) {
+			if got := IsReleaseBranch(tc.ref); got != tc.expected {
+				t.Errorf("expected %v, got %v", tc.expected, got)
+			}
+		})
+	}
+}
