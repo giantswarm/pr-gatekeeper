@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-27
+
 ### Changed
 
 * Ignore `.circleci/**` by default.
@@ -56,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Correctly check for the require App Test checks for each provider when ./tests/e2e/config.yaml present in repo.
 * Fix linting issues.
 
-[Unreleased]: https://github.com/giantswarm/pr-gatekeeper/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/giantswarm/pr-gatekeeper/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/giantswarm/pr-gatekeeper/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/giantswarm/pr-gatekeeper/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/giantswarm/pr-gatekeeper/releases/tag/v0.1.0
