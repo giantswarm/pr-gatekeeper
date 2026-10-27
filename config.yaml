@@ -11,6 +11,7 @@ knownTriggers:
 # A repo can override this list with its own `ignoredPaths`.
 ignoredPaths:
   - ".github/**"
+  - ".circleci/**"
   - ".cursor/**"
   - ".claude/**"
   - "docs/**"
