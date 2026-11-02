@@ -1,5 +1,5 @@
-github.com/giantswarm/apptest-framework/v5 v5.4.3 h1:+iJf6fVgrNGdSWjmxF8g0s1QJa+7qLv0YDnj4wHC0T0=
-github.com/giantswarm/apptest-framework/v5 v5.4.3/go.mod h1:3aPJvjY7XPdoNjhWb8gAzO5IqHLAuczpRsVh0PM2iPg=
+github.com/giantswarm/apptest-framework/v5 v5.4.4 h1:UXcVDIxbvLZb0gVqLeNPPFxEJX6WD/B2VW9xJtSx3GI=
+github.com/giantswarm/apptest-framework/v5 v5.4.4/go.mod h1:rnJKqpsZ6QzHs6UGX3AgYg2es7TuZka5g0UpYuZrl0Y=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
@@ -9,8 +9,8 @@ github.com/google/go-querystring v1.2.0 h1:yhqkPbu2/OH+V9BfpCVPZkNmUXhb2gBxJArfh
 github.com/google/go-querystring v1.2.0/go.mod h1:8IFJqpSRITyJ8QhQ13bmbeMBDfmeEJZD5A0egEOmkqU=
 go.yaml.in/yaml/v2 v2.4.4 h1:tuyd0P+2Ont/d6e2rl3be67goVK4R6deVxCUX5vyPaQ=
 go.yaml.in/yaml/v2 v2.4.4/go.mod h1:gMZqIpDtDqOfM0uNfy0SkpRhvUryYH0Z6wdMYcacYXQ=
-go.yaml.in/yaml/v3 v3.0.5 h1:N6y/pJk8buWs9NY5ERU2HSMfm+IuD/OtfdAnq6kESPw=
-go.yaml.in/yaml/v3 v3.0.5/go.mod h1:HVTZu1O7/Vkt2N+BFy8Zza+lnLsABggaTM2ZpNIGuKg=
+go.yaml.in/yaml/v3 v3.0.6 h1:zcDfvjXEqTQmpjniUBLc91xYJMB2c4QOFxEF/LCEckM=
+go.yaml.in/yaml/v3 v3.0.6/go.mod h1:HVTZu1O7/Vkt2N+BFy8Zza+lnLsABggaTM2ZpNIGuKg=
 golang.org/x/oauth2 v0.37.0 h1:JUlcxA8oAtauLfiH8FX2/FkAWHAdi0QtGCGc+hofE98=
 golang.org/x/oauth2 v0.37.0/go.mod h1:IxwZNxUULJmpBFf9K/9NTMSIfZZuvuTy1gGxhigP/58=
 k8s.io/apimachinery v0.37.2 h1:G4t9RGoPDbQML38hz/kQQiltttgd3egg2ODCR8aIc2o=
