@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+* Drop the `Generate MC` requirements on `releases` and `mc-bootstrap` PRs; MC builds moved to mctl nightlies.
+
 ## [0.4.0] - 2026-11-12
 
 ### Changed
