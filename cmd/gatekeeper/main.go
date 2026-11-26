@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 
 	apptest "github.com/giantswarm/apptest-framework/v5/pkg/config"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -113,9 +114,6 @@ func main() {
 
 	// Handle skipping CI via `/skip-ci [MESSAGE]` comment trigger
 	{
-		skipTriggerComment := regexp.MustCompile(`(?mi)^\/skip-ci (?P<reason>.+)(?:\r|\n|$)`)
-		skipTriggerCommentWithoutMessage := regexp.MustCompile(`(?mi)^\/skip-ci\s?(?:\r|\n|$)`)
-
 		latestCommitTime, err := gh.GetLastCommitTimestamp()
 		if err != nil {
 			fmt.Println("Failed to get last commit timestamp, unable to perform check for skip trigger comments")
@@ -124,30 +122,44 @@ func main() {
 		if err != nil {
 			fmt.Println("Failed to get PR Comments, unable to perform check for skip trigger comments")
 		}
+		// A `/skip-ci` written into the "Review changes" box is a review, not a comment
+		reviews, err := gh.GetPRReviews()
+		if err != nil {
+			fmt.Println("Failed to get PR Reviews, unable to perform check for skip triggers in review bodies")
+		}
 
 		oldSkipFound := false
 		skipWithoutReasonFound := false
 		skipReason := ""
 		skippedBy := ""
 
-		if latestCommitTime != nil && comments != nil {
+		if latestCommitTime != nil && (comments != nil || reviews != nil) {
+			candidates := []skipCandidate{}
 			for _, comment := range comments {
-				if comment.AuthorAssociation != nil && (*comment.AuthorAssociation == "OWNER" || *comment.AuthorAssociation == "MEMBER") && comment.Body != nil && *comment.Body != "" {
-					triggerMatches := skipTriggerComment.FindAllStringSubmatch(*comment.Body, -1)
-					triggerMatchesWihthoutMessage := skipTriggerCommentWithoutMessage.FindAllStringSubmatch(*comment.Body, -1)
-					if len(triggerMatches) > 0 {
-						if comment.CreatedAt.After(latestCommitTime.Time) {
-							result.SkipCI = true
-							skipReason = triggerMatches[0][1]
-							skippedBy = comment.User.GetLogin()
-						} else {
-							oldSkipFound = true
-							fmt.Println("A `/skip-ci` trigger comment was found but it was made before the last commit, ignoring")
-						}
-					} else if len(triggerMatchesWihthoutMessage) > 0 {
-						skipWithoutReasonFound = true
-					}
-				}
+				candidates = append(candidates, skipCandidate{
+					Body:              comment.GetBody(),
+					AuthorAssociation: comment.GetAuthorAssociation(),
+					Author:            comment.GetUser().GetLogin(),
+					CreatedAt:         comment.GetCreatedAt().Time,
+				})
+			}
+			for _, review := range reviews {
+				candidates = append(candidates, skipCandidate{
+					Body:              review.GetBody(),
+					AuthorAssociation: review.GetAuthorAssociation(),
+					Author:            review.GetUser().GetLogin(),
+					CreatedAt:         review.GetSubmittedAt().Time,
+				})
+			}
+
+			skip := findSkipTrigger(candidates, latestCommitTime.Time)
+			result.SkipCI = skip.Skip
+			skipReason = skip.Reason
+			skippedBy = skip.SkippedBy
+			oldSkipFound = skip.OldSkipFound
+			skipWithoutReasonFound = skip.WithoutReasonFound
+			if oldSkipFound {
+				fmt.Println("A `/skip-ci` trigger comment was found but it was made before the last commit, ignoring")
 			}
 		}
 
@@ -326,4 +338,48 @@ func getAppTestProviders(configs []string) ([]string, error) {
 	slices.Sort(providers)
 
 	return providers, nil
+}
+
+var (
+	skipTriggerComment               = regexp.MustCompile(`(?mi)^\/skip-ci (?P<reason>.+)(?:\r|\n|$)`)
+	skipTriggerCommentWithoutMessage = regexp.MustCompile(`(?mi)^\/skip-ci\s?(?:\r|\n|$)`)
+)
+
+// skipCandidate is a PR comment or PR review body that may carry a `/skip-ci` trigger
+type skipCandidate struct {
+	Body              string
+	AuthorAssociation string
+	Author            string
+	CreatedAt         time.Time
+}
+
+type skipTrigger struct {
+	Skip               bool
+	Reason             string
+	SkippedBy          string
+	OldSkipFound       bool
+	WithoutReasonFound bool
+}
+
+// findSkipTrigger looks for a `/skip-ci [reason]` trigger made by an org member after the latest commit
+func findSkipTrigger(candidates []skipCandidate, latestCommitTime time.Time) skipTrigger {
+	found := skipTrigger{}
+	for _, candidate := range candidates {
+		if candidate.Body == "" || (candidate.AuthorAssociation != "OWNER" && candidate.AuthorAssociation != "MEMBER") {
+			continue
+		}
+		triggerMatches := skipTriggerComment.FindAllStringSubmatch(candidate.Body, -1)
+		if len(triggerMatches) > 0 {
+			if candidate.CreatedAt.After(latestCommitTime) {
+				found.Skip = true
+				found.Reason = strings.TrimSpace(triggerMatches[0][1])
+				found.SkippedBy = candidate.Author
+			} else {
+				found.OldSkipFound = true
+			}
+		} else if skipTriggerCommentWithoutMessage.MatchString(candidate.Body) {
+			found.WithoutReasonFound = true
+		}
+	}
+	return found
 }

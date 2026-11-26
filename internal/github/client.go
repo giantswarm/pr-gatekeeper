@@ -69,6 +69,15 @@ func (c *Client) GetPRComments() ([]*github.IssueComment, error) {
 	return comments, err
 }
 
+func (c *Client) GetPRReviews() ([]*github.PullRequestReview, error) {
+	prNumber, err := strconv.Atoi(c.PR)
+	if err != nil {
+		return nil, err
+	}
+	reviews, _, err := c.PullRequests.ListReviews(c.Ctx, owner, c.Repo, prNumber, &github.ListOptions{PerPage: 100})
+	return reviews, err
+}
+
 func (c *Client) GetLastCommitTimestamp() (*github.Timestamp, error) {
 	prNumber, err := strconv.Atoi(c.PR)
 	if err != nil {
